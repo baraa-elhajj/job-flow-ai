@@ -11,12 +11,13 @@ async function runTest() {
         console.log("Running scrapeAndStoreHNHiringJobs('april', 2026)...");
         await scrapeAndStoreHNHiringJobs('april', 2026);
 
-        console.log("Test complete. Disconnecting from database...");
-        await mongoose.disconnect();
         process.exit(0);
     } catch (error) {
         console.error("Test failed:", error);
         process.exit(1);
+    } finally {
+        console.log("Disconnecting from database...");
+        await mongoose.disconnect();
     }
 }
 
