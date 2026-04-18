@@ -149,7 +149,7 @@ export const TECH_SKILLS = [
 ];
 
 // Build regex — note C++ and C# are pre-escaped in the array
-export const TECH_SKILLS_REGEX = new RegExp(`(?<![\\w.])(${ TECH_SKILLS.join('|') })(?![\\w.])`, 'gi');
+export const TECH_SKILLS_REGEX = new RegExp(`(?<![\\w.])(${TECH_SKILLS.join('|')})(?![\\w.])`, 'gi');
 
 export const SENIORITY_LEVELS = [
     // Junior variants
