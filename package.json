@@ -1,0 +1,16 @@
+{
+  "name": "job-flow-ai",
+  "version": "1.0.0",
+  "description": "Root package for job-flow-ai to manage client and server",
+  "private": true,
+  "scripts": {
+    "install-all": "npm install && npm install --prefix server && npm install --prefix client",
+    "dev": "concurrently \"npm run dev --prefix server\" \"npm run dev --prefix client\"",
+    "build:client": "npm run build --prefix client",
+    "build:server": "npm run build --prefix server",
+    "build-all": "npm run build:client && npm run build:server"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
