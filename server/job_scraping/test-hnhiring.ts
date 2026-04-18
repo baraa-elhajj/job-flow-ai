@@ -1,7 +1,7 @@
 import "dotenv/config";
 import mongoose from "mongoose";
 import { connectDB } from '../config/db.js';
-import { scrapeAndStoreHNHiringJobs } from './hnhiring-scraper.js';
+import { scrapeAndStoreHNHiringJobs } from './scrappers/hnhiring-scraper.js';
 
 async function runTest() {
     try {
