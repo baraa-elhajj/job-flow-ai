@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { scrapeHNHiring } from "../services/jobScraper.js";
+import { scrapeHNHiring } from "../services/hnhiringScraper.js";
 
 // GET /api/jobs/hnhiring?month=?&year=?
 export async function fetchHNHiringJobs(req: Request, res: Response) {
