@@ -1,5 +1,5 @@
-import * as regexUtils from "./regex_utils.js";
-import { connectDB } from "../../config/db.js";
+import * as regexUtils from "./regexUtils.js";
+import { connectDB } from "../config/db.js";
 import { match } from "node:assert";
 
 // connectDB();
