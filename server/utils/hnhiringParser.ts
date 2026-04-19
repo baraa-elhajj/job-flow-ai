@@ -1,8 +1,4 @@
 import * as regexUtils from "./regexUtils.js";
-import { connectDB } from "../config/db.js";
-import { match } from "node:assert";
-
-// connectDB();
 
 type HNParseResult = {
     companyName?: string;
@@ -124,9 +120,11 @@ class HNHiringParser {
     }
 }
 
-console.log(new HNHiringParser().parseHnTitle("OneChronos | Systems Engineers + Software Engineer, Data Platform | NYC (HQ), London or Amsterdam | Flexible / Remote | Full-Time | Remote"));
-console.log(new HNHiringParser().parseHnTitle("Eequ | Senior Backend Engineer | Remote (UK) | Full-time | £80k–£110k | Node.js, NestJS, TypeScript, MySQL, AWS, Terraform"));
-console.log(new HNHiringParser().parseHnTitle("Greenhouse Software | Engineering Manager (Analytics Product) | REMOTE (Ontario or BC, Canada) | Full-time | We're unable to support sponsorship at this time."));
-console.log(new HNHiringParser().parseHnTitle("Lucia Protocol Remote | Full time | https://www.luciaprotocol.com/"));
-console.log(new HNHiringParser().parseHnTitle("remoter | Platform Engineer (Security), DevSecOps Engineer & Full-stack Product Engineer| Hybrid | NYC"));
-console.log(new HNHiringParser().parseHnTitle("Apple | SRE | San Diego | Full-time"));
+// TODO: Remove later when parsing is working 100% as expected.
+
+// console.log(new HNHiringParser().parseHnTitle("OneChronos | Systems Engineers + Software Engineer, Data Platform | NYC (HQ), London or Amsterdam | Flexible / Remote | Full-Time | Remote"));
+// console.log(new HNHiringParser().parseHnTitle("Eequ | Senior Backend Engineer | Remote (UK) | Full-time | £80k–£110k | Node.js, NestJS, TypeScript, MySQL, AWS, Terraform"));
+// console.log(new HNHiringParser().parseHnTitle("Greenhouse Software | Engineering Manager (Analytics Product) | REMOTE (Ontario or BC, Canada) | Full-time | We're unable to support sponsorship at this time."));
+// console.log(new HNHiringParser().parseHnTitle("Lucia Protocol Remote | Full time | https://www.luciaprotocol.com/"));
+// console.log(new HNHiringParser().parseHnTitle("remoter | Platform Engineer (Security), DevSecOps Engineer & Full-stack Product Engineer| Hybrid | NYC"));
+// console.log(new HNHiringParser().parseHnTitle("Apple | SRE | San Diego | Full-time"));
