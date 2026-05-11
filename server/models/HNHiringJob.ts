@@ -8,6 +8,16 @@ export interface HNHiringJobData {
     text: string;
     links: string[];
     monthYear: string;
+    companyName?: string;
+    jobTitle?: string[];
+    jobType?: string[];
+    employmentType?: string[];
+    location?: string[];
+    skills?: string[];
+    seniority?: string[];
+    salary?: string[];
+    visaSponsorship?: string[];
+    url?: string[];
 }
 
 // Mongoose Document interface
@@ -20,6 +30,16 @@ const HNHiringJobSchema: Schema = new Schema({
     text: { type: String },
     links: [{ type: String }],
     monthYear: { type: String, required: true },
+    companyName: { type: String },
+    jobTitle: [{ type: String }],
+    jobType: [{ type: String }],
+    employmentType: [{ type: String }],
+    location: [{ type: String }],
+    skills: [{ type: String }],
+    seniority: [{ type: String }],
+    salary: [{ type: String }],
+    visaSponsorship: [{ type: String }],
+    url: [{ type: String }],
 }, { timestamps: true });
 
 export const HNHiringJob = mongoose.model<IHNHiringJob>('HNHiringJob', HNHiringJobSchema);

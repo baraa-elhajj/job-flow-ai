@@ -13,7 +13,7 @@ type HNParseResult = {
     url?: string[];
 }
 
-class HNHiringParser {
+export class HNHiringParser {
 
     result: HNParseResult;
 
