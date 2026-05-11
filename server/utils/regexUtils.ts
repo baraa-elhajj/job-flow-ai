@@ -1,5 +1,6 @@
 export const WORK_TYPE_REGEX = /\b(remote|onsite|on-site|hybrid|anywhere|worldwide|global)(?:\s*\(([^)]{1,40})\))?/gi;
 export const URL_REGEX = /(?:https?:\/\/|www\.)[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_\+.~#?&//=]*)/gi;
+export const EMAIL_REGEX = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/gi;
 
 
 export const COUNTRIES_AND_REGIONS = [
@@ -180,7 +181,10 @@ export const SENIORITY_LEVELS = [
     "E3", "E4", "E5", "E6", "E7",
 ];
 
-export const SENIORITY_REGEX = new RegExp(`\\b(${SENIORITY_LEVELS.join('|')})\\b`, 'gi');
+// Pattern to match "5+ years", "3+ YOE", "10+ yrs of experience"
+const YEARS_OF_EXPERIENCE_PATTERN = "\\d+\\+?\\s*(?:years?|yrs?|yoe)(?:\\s+of\\s+experience)?";
+
+export const SENIORITY_REGEX = new RegExp(`\\b(${SENIORITY_LEVELS.join('|')}|${YEARS_OF_EXPERIENCE_PATTERN})\\b`, 'gi');
 
 /**
  * Matches phrases that indicate visa sponsorship availability (or lack thereof).
@@ -208,43 +212,57 @@ export const SALARY_REGEX =
 export const EMPLOYMENT_TYPE_REGEX =
     /\b(full[\s-]?time|part[\s-]?time|contract(?:or)?|freelance|temporary|temp|fixed[\s-]?term|per[\s-]?diem|casual|seasonal|internship|co[\s-]?op)\b/gi;
 
-// JS does not support the /x (verbose/comment) flag, so we build the regex from an array of patterns
+// ---------------------------------------------------------------------------
+// Job Role Detection
+// ---------------------------------------------------------------------------
+
+/**
+ * Suffix words that reliably indicate a job role when preceded by qualifiers.
+ * Used to build a broad catch-all pattern so we don't need to enumerate every
+ * possible "<Qualifier> Engineer" combination.
+ */
+const ROLE_SUFFIX_WORDS = [
+    "engineer", "developer", "programmer",
+    "architect", "designer", "manager",
+    "scientist", "analyst", "researcher",
+    "lead", "director",
+    "writer", "advocate", "evangelist",
+    "specialist", "consultant", "coordinator",
+    "strategist", "administrator", "operator",
+    "technician", "editor", "officer",
+];
+
+/**
+ * Two-tier job role patterns:
+ *
+ * Tier 1 – Specific shorthand / stack labels that don't end with a standard
+ *          role-suffix word (e.g. "full-stack", "SRE", "devrel").
+ *
+ * Tier 2 – Broad catch-all: 0-4 optional qualifier words followed by any
+ *          role-suffix word.  Handles the long tail of titles like
+ *          "Founding Engineer", "BDR Engineer", "AI Operations Lead",
+ *          "Performance Marketing Manager", "Compiler Engineer", etc.
+ */
 const JOB_ROLE_PATTERNS = [
-    // Engineering
+    // ── Tier 1: specific shorthand roles ────────────────────────────────
+    // Stack descriptors (these imply an engineering role on their own)
     "full[\\s-]?stack", "front[\\s-]?end", "back[\\s-]?end",
-    "software\\s+engineer(?:ing)?", "web\\s+developer",
-    "mobile\\s+(?:developer|engineer)",
-    "ios\\s+(?:developer|engineer)", "android\\s+(?:developer|engineer)",
-    "embedded\\s+(?:engineer|developer|systems)",
-    "firmware\\s+engineer",
-    "platform\\s+engineer", "infrastructure\\s+engineer",
-    "site\\s+reliability\\s+engineer", "sre",
-    "devops\\s+engineer", "cloud\\s+engineer",
-    "security\\s+engineer", "cybersecurity",
-    "qa\\s+engineer", "test\\s+engineer", "automation\\s+engineer",
-    "game\\s+developer", "graphics\\s+engineer",
 
-    // AI / ML / Data
-    "ai\\s+engineer", "ml\\s+engineer",
-    "machine\\s+learning\\s+engineer",
-    "deep\\s+learning\\s+engineer",
-    "data\\s+scientist", "data\\s+engineer",
-    "data\\s+analyst", "business\\s+analyst",
-    "nlp\\s+engineer", "computer\\s+vision\\s+engineer",
-    "research\\s+(?:engineer|scientist)",
-    "llm\\s+engineer",
+    // Acronym & short-form roles
+    "sre", "devrel", "pm", "dba",
+    "cybersecurity",
 
-    // Product / Design
-    "product\\s+manager", "pm",
-    "product\\s+designer", "ux\\s+designer", "ui\\s+designer",
-    "ux\\/ui\\s+designer", "graphic\\s+designer",
-    "design\\s+engineer",
+    // Leadership titles with "of" (Head of Engineering, VP of Product, etc.)
+    "head\\s+of\\s+\\w+(?:\\s+\\w+)?",
+    "vp\\s+(?:of\\s+)?\\w+(?:\\s+\\w+)?",
 
-    // Other
-    "solutions\\s+engineer", "sales\\s+engineer",
-    "developer\\s+advocate", "devrel",
-    "technical\\s+writer",
-    "blockchain\\s+developer", "smart\\s+contract\\s+developer",
+    // ── Tier 2: broad <qualifiers?> + <role suffix> ─────────────────────
+    // Matches 0-4 qualifier words (letters, digits, +, #) separated by
+    // whitespace, /, &, or - then a role suffix word.
+    // Examples: "Engineer", "Software Engineer", "Senior Backend Developer",
+    //           "AI/ML Research Scientist", "Founding Engineer"
+    // Does not allow commas or periods to prevent matching whole sentences.
+    `(?:[a-z][a-z0-9+#]*(?:[\\s/&\\-]+[a-z][a-z0-9+#]*){0,4}\\s+)?(?:${ROLE_SUFFIX_WORDS.join("|")})`,
 ];
 
 export const JOB_ROLE_REGEX = new RegExp(`\\b(${JOB_ROLE_PATTERNS.join("|")})\\b`, "gi");
