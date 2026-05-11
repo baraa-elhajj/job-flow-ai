@@ -1,11 +1,25 @@
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import Home from "./pages/Home";
+import Login from "./pages/Login";
+import JobsList from "./pages/JobsList";
+import JobDetails from "./pages/JobDetails";
+import NotFound from "./pages/NotFound";
+import Layout from "./components/Layout";
 
 function App() {
   return (
-    <>
-      <div className="mt-4 ml-4 text-2xl font-bold">Welcome to JobFlow AI!</div>
-      <div className="mt-4 ml-4 text-md italic">JobFlow AI is an AI-powered job application engine that automates the tedious parts of the job hunt.</div>
-    </>
-  )
+    <Router>
+      <Routes>
+        <Route path="/" element={<Layout />}>
+          <Route index element={<Home />} />
+          <Route path="/jobs" element={<JobsList />} />
+          <Route path="/jobs/:id" element={<JobDetails />} />
+        </Route>
+        <Route path="/login" element={<Login />} />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </Router>
+  );
 }
 
-export default App
+export default App;
