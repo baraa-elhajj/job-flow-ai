@@ -3,6 +3,37 @@ import * as cheerio from 'cheerio';
 import { HNHiringJob } from '../models/HNHiringJob.js';
 import type { HNHiringJobData } from '../models/HNHiringJob.js';
 
+function parseDatePosted(raw: string): string {
+    const dateMatch = raw.match(/\b\d{4}-\d{2}-\d{2}\b/);
+    if (dateMatch) {
+        return dateMatch[0];
+    }
+
+    const relativeMatch = raw.match(/about\s+(\d+)\s+(minute|hour|day|month)s?\s+ago/i);
+    if (relativeMatch) {
+        const value = parseInt(relativeMatch[1]!, 10);
+        const unit = relativeMatch[2]!.toLowerCase();
+        const date = new Date();
+
+        if (unit === 'minute') {
+            date.setMinutes(date.getMinutes() - value);
+        } else if (unit === 'hour') {
+            date.setHours(date.getHours() - value);
+        } else if (unit === 'day') {
+            date.setDate(date.getDate() - value);
+        } else if (unit === 'month') {
+            date.setMonth(date.getMonth() - value);
+        }
+
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+
+    return raw.replace(/^Posted\s+/i, '').trim();
+}
+
 /**
  * Scrapes job postings from hnhiring.com for the given month and year.
  * @param month - Month name in lowercase (e.g. "april")
@@ -10,7 +41,7 @@ import type { HNHiringJobData } from '../models/HNHiringJob.js';
  * @returns Array of parsed job objects
  */
 export async function scrapeHNHiring(month: string, year: number) {
-    const url = `https://hnhiring.com/${month.toLowerCase()}-${year}`;
+    const url = `https://hnhiring.com/locations/remote`;
     console.log(`Fetching jobs from ${url}...`);
 
     const { data: html } = await axios.get(url);
@@ -27,11 +58,12 @@ export async function scrapeHNHiring(month: string, year: number) {
         const by = el.find('div.user a').first().text().trim();
 
         // Extract date
-        const datePosted = el.find('span.type-info').first().text().trim();
+        const rawDate = el.find('span.type-info').first().text().trim();
+        const datePosted = parseDatePosted(rawDate);
 
         // Extract body
         const bodyEl = el.find('div.body');
-        const text = bodyEl.text().trim();
+        let text = bodyEl.text().trim();
 
         // Extract title: raw text nodes before the first <p> element
         let title = '';
@@ -57,6 +89,8 @@ export async function scrapeHNHiring(month: string, year: number) {
                 links.push(href);
             }
         });
+
+        text = text.replace(title, "")
 
         if (by && text) {
             jobs.push({

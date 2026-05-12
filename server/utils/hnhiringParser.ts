@@ -1,4 +1,5 @@
 import * as regexUtils from "./regexUtils.js";
+import { GroqCompanyExtractor } from "./LLMHnHiringParserHelpers.js";
 
 type HNParseResult = {
     companyName?: string;
@@ -16,18 +17,32 @@ type HNParseResult = {
 export class HNHiringParser {
 
     result: HNParseResult;
+    llm: GroqCompanyExtractor;
 
     constructor() {
         this.result = {};
+        this.llm = new GroqCompanyExtractor();
     }
 
-    parseHnTitle(title: string) {
-        // Reset result on each call so the class instance can be re-used safely
-        this.result = {};
-        let titleParts = title.split("|").map(p => p.trim()).filter(Boolean) as string[];
-        if (titleParts.length === 1) {
-            titleParts = title.split("\\").map(p => p.trim()).filter(Boolean) as string[];
-        }
+    getLinksFromDesc(description: string): string[] {
+        if (!description) return [];
+        regexUtils.URL_REGEX.lastIndex = 0;
+        const matches = description.match(regexUtils.URL_REGEX);
+        if (!matches) return [];
+        // Remove duplicates and clean up
+        return Array.from(new Set(matches.map(m => m.trim())));
+    }
+
+    getMailsFromDesc(description: string): string[] {
+        if (!description) return [];
+        regexUtils.EMAIL_REGEX.lastIndex = 0;
+        const matches = description.match(regexUtils.EMAIL_REGEX);
+        if (!matches) return [];
+        // Remove duplicates and clean up
+        return Array.from(new Set(matches.map(m => m.trim())));
+    }
+
+    executeRegexOnString(s: string, isTitle: boolean = false) {
         const REGEX_MAPPING: { regex: RegExp; field: keyof HNParseResult; removeMatch?: boolean }[] = [
             { regex: regexUtils.URL_REGEX, field: 'url', removeMatch: true },
             { regex: regexUtils.VISA_SPONSORSHIP_REGEX, field: 'visaSponsorship', removeMatch: true },
@@ -40,82 +55,104 @@ export class HNHiringParser {
             { regex: regexUtils.SENIORITY_REGEX, field: 'seniority' },
             { regex: regexUtils.JOB_ROLE_REGEX, field: 'jobTitle' }
         ];
-        if (titleParts.length > 0) {
-            const p0 = titleParts[0]!;
-            let minIndex = p0.length;
 
-            for (const mapping of REGEX_MAPPING) {
-                mapping.regex.lastIndex = 0;
-                const match = mapping.regex.exec(p0);
-                if (match && match.index < minIndex) {
-                    minIndex = match.index;
+        for (const mapping of REGEX_MAPPING) {
+            // If we are parsing the description (not the title) and we already found location or jobType in the title, skip them.
+            if (!isTitle && (mapping.field === 'location' || mapping.field === 'jobType')) {
+                const existingList = this.result[mapping.field];
+                if (existingList && existingList.length > 0) {
+                    continue;
                 }
             }
 
-            const companyStr = p0.substring(0, minIndex).replace(/^[,\-\+\s|]+|[,\-\+\s|]+$/g, '').trim();
-            if (companyStr) {
-                this.result.companyName = companyStr;
-            }
+            mapping.regex.lastIndex = 0;
+            const matches = s.match(mapping.regex);
+            if (matches) {
+                const cleanedMatches = matches
+                    .map(m => m.trim().replace(/^[,\s]+|[,\s]+$/g, ''))
+                    .filter(Boolean);
 
-            // Slice out the company name so only the matching remainder gets scanned in the loop
-            titleParts[0] = p0.substring(minIndex);
+                if (cleanedMatches.length > 0) {
+                    if (!this.result[mapping.field]) {
+                        // TypeScript doesn't dynamically know we're addressing array fields here
+                        (this.result[mapping.field] as string[]) = [];
+                    }
+
+                    const targetArray = this.result[mapping.field] as string[];
+                    for (const matchStr of cleanedMatches) {
+                        // Only add if not entirely duplicated
+                        if (!targetArray.includes(matchStr)) {
+                            targetArray.push(matchStr);
+                        }
+                    }
+                }
+
+                if (mapping.removeMatch) {
+                    s = s.replace(mapping.regex, "");
+                }
+            }
+        }
+    }
+
+    hasAnyRegexMatch(s: string): boolean {
+        const regexes = [
+            regexUtils.URL_REGEX,
+            regexUtils.VISA_SPONSORSHIP_REGEX,
+            regexUtils.SALARY_REGEX,
+            regexUtils.EMPLOYMENT_TYPE_REGEX,
+            regexUtils.WORK_TYPE_REGEX,
+            regexUtils.COUNTRY_REGEX,
+            regexUtils.US_CITY_REGEX,
+            regexUtils.TECH_SKILLS_REGEX,
+            regexUtils.SENIORITY_REGEX,
+            regexUtils.JOB_ROLE_REGEX
+        ];
+
+        for (const regex of regexes) {
+            regex.lastIndex = 0;
+            if (regex.test(s)) {
+                return true;
+            }
         }
 
-        const titleFallbackCandidates: string[] = [];
+        return false;
+    }
+
+
+    async parseHnJob(title: string, description: string) {
+        const links = this.getLinksFromDesc(description);
+        const mail = this.getMailsFromDesc(description);
+
+        // Reset result on each call so the class instance can be re-used safely
+        this.result = {};
+        let titleParts = title.split("|").map(p => p.trim()).filter(Boolean) as string[];
+        if (titleParts.length === 1) {
+            titleParts = title.split("\\").map(p => p.trim()).filter(Boolean) as string[];
+        }
+
+        if (titleParts.length != 0) {
+            const firstPart = titleParts[0]!;
+
+            if (!this.hasAnyRegexMatch(firstPart))
+                this.result.companyName = firstPart;
+
+            else {
+                const cpname = await this.llm.extractCompanyName(firstPart, links, mail);
+
+                if (cpname != null) {
+                    this.result.companyName = cpname;
+                }
+            }
+        }
+
 
         for (let i = 0; i < titleParts.length; i++) {
             let p = titleParts[i]!;
-
-            // Match and extract each regex mapped globally
-            for (const mapping of REGEX_MAPPING) {
-                mapping.regex.lastIndex = 0;
-                const matches = p.match(mapping.regex);
-                if (matches) {
-                    const cleanedMatches = matches
-                        .map(m => m.trim().replace(/^[,\s]+|[,\s]+$/g, ''))
-                        .filter(Boolean);
-
-                    if (cleanedMatches.length > 0) {
-                        if (!this.result[mapping.field]) {
-                            // TypeScript doesn't dynamically know we're addressing array fields here
-                            (this.result[mapping.field] as string[]) = [];
-                        }
-
-                        const targetArray = this.result[mapping.field] as string[];
-
-                        if (mapping.field === 'jobTitle') {
-                            // If it's a job title, keep the full remaining context of this section, not just the isolated match
-                            const fullSection = p.replace(/^[,\-\+\s|]+|[,\-\+\s|]+$/g, '').trim();
-                            if (fullSection && !targetArray.includes(fullSection)) {
-                                targetArray.push(fullSection);
-                            }
-                        } else {
-                            if (mapping.field === 'seniority') {
-                                const fullSection = p.replace(/^[,\-\+\s|]+|[,\-\+\s|]+$/g, '').trim();
-                                if (fullSection && !titleFallbackCandidates.includes(fullSection)) {
-                                    titleFallbackCandidates.push(fullSection);
-                                }
-                            }
-
-                            for (const matchStr of cleanedMatches) {
-                                // Only add if not entirely duplicated
-                                if (!targetArray.includes(matchStr)) {
-                                    targetArray.push(matchStr);
-                                }
-                            }
-                        }
-                    }
-
-                    if (mapping.removeMatch) {
-                        p = p.replace(mapping.regex, "");
-                    }
-                }
-            }
+            this.executeRegexOnString(p, true);
         }
 
-        if (!this.result.jobTitle || this.result.jobTitle.length == 0) {
-            this.result.jobTitle = titleFallbackCandidates.length > 0 ? titleFallbackCandidates : [``];
-        }
+        this.executeRegexOnString(description, false);
+
         return this.result;
     }
 }
