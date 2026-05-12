@@ -46,7 +46,7 @@ export class HNHiringParser {
         const REGEX_MAPPING: { regex: RegExp; field: keyof HNParseResult; removeMatch?: boolean }[] = [
             { regex: regexUtils.URL_REGEX, field: 'url', removeMatch: true },
             { regex: regexUtils.VISA_SPONSORSHIP_REGEX, field: 'visaSponsorship', removeMatch: true },
-            { regex: regexUtils.SALARY_REGEX, field: 'salary', removeMatch: true },
+            // { regex: regexUtils.SALARY_REGEX, field: 'salary', removeMatch: true },
             { regex: regexUtils.EMPLOYMENT_TYPE_REGEX, field: 'employmentType', removeMatch: true },
             { regex: regexUtils.WORK_TYPE_REGEX, field: 'jobType', removeMatch: true },
             { regex: regexUtils.COUNTRY_REGEX, field: 'location', removeMatch: true },
@@ -98,7 +98,7 @@ export class HNHiringParser {
         const regexes = [
             regexUtils.URL_REGEX,
             regexUtils.VISA_SPONSORSHIP_REGEX,
-            regexUtils.SALARY_REGEX,
+            // regexUtils.SALARY_REGEX,
             regexUtils.EMPLOYMENT_TYPE_REGEX,
             regexUtils.WORK_TYPE_REGEX,
             regexUtils.COUNTRY_REGEX,
@@ -152,6 +152,23 @@ export class HNHiringParser {
         }
 
         this.executeRegexOnString(description, false);
+
+
+        for (const field in this.result) {
+            const key = field as keyof HNParseResult;
+            const list = this.result[key];
+
+            if (Array.isArray(list)) {
+                const normalize = (str: string) => str.toLowerCase().replace(/[^a-z0-9+#]/g, '');
+
+                (this.result[key] as string[]) = list.filter((currentStr: string, i: number) => {
+                    const normCurrent = normalize(currentStr);
+                    return !list.some((otherStr: string, j: number) => {
+                        return i !== j && normalize(otherStr).includes(normCurrent);
+                    });
+                });
+            }
+        }
 
         return this.result;
     }

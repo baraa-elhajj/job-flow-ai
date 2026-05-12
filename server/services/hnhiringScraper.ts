@@ -63,10 +63,10 @@ export async function scrapeHNHiring(month: string, year: number) {
 
         // Extract body
         const bodyEl = el.find('div.body');
-        let text = bodyEl.text().trim();
 
         // Extract title: raw text nodes before the first <p> element
         let title = '';
+        const nodesToRemove: any[] = [];
         bodyEl.contents().each((_i, node) => {
             // Stop when we hit the first <p> element
             if (node.type === 'tag' && (node as any).tagName === 'p') {
@@ -78,8 +78,15 @@ export async function scrapeHNHiring(month: string, year: number) {
             } else if (node.type === 'tag') {
                 title += $(node).text();
             }
+            nodesToRemove.push(node);
         });
         title = title.trim();
+
+        // Remove the title nodes from the body so they don't appear in the description
+        nodesToRemove.forEach(node => $(node).remove());
+
+        // Get the remaining content as HTML to preserve links and paragraphs
+        const text = bodyEl.html()?.trim() || "";
 
         // Extract all links inside the body
         const links: string[] = [];
@@ -89,8 +96,6 @@ export async function scrapeHNHiring(month: string, year: number) {
                 links.push(href);
             }
         });
-
-        text = text.replace(title, "")
 
         if (by && text) {
             jobs.push({

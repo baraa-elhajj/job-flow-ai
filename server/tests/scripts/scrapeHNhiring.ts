@@ -9,7 +9,7 @@ async function runTest() {
         await connectDB();
 
         console.log("Running scrapeAndStoreHNHiringJobs('may', 2026)...");
-        await scrapeAndStoreHNHiringJobs('mays', 2026);
+        await scrapeAndStoreHNHiringJobs('may', 2026);
 
         process.exit(0);
     } catch (error) {

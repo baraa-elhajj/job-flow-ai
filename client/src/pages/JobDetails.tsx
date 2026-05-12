@@ -4,10 +4,9 @@ import {
   ArrowLeft,
   MapPin,
   Clock,
-  DollarSign,
   Briefcase,
   Loader2,
-  ExternalLink,
+  ChevronDown,
 } from "lucide-react";
 
 interface ParsedJob {
@@ -27,6 +26,47 @@ interface ParsedJob {
   salary?: string[];
   visaSponsorship?: string[];
   url?: string[];
+}
+
+/**
+ * A collapsible section with a header, chevron icon, and smooth expand/collapse animation.
+ */
+function CollapsibleSection({
+  title,
+  icon,
+  children,
+  defaultOpen = true,
+}: {
+  title: string;
+  icon?: React.ReactNode;
+  children: React.ReactNode;
+  defaultOpen?: boolean;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+
+  return (
+    <div className="mb-6">
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className="flex items-center gap-2 w-full text-left group"
+      >
+        {icon}
+        <p className="text-slate-400 text-sm uppercase tracking-wider font-semibold group-hover:text-slate-300 transition-colors">
+          {title}
+        </p>
+        <ChevronDown
+          className={`w-4 h-4 text-slate-500 transition-transform duration-300 ${open ? "rotate-180" : "rotate-0"
+            }`}
+        />
+      </button>
+      <div
+        className={`grid transition-all duration-300 ease-in-out ${open ? "grid-rows-[1fr] opacity-100 mt-3" : "grid-rows-[0fr] opacity-0 mt-0"
+          }`}
+      >
+        <div className="overflow-hidden">{children}</div>
+      </div>
+    </div>
+  );
 }
 
 export default function JobDetail() {
@@ -89,7 +129,7 @@ export default function JobDetail() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900">
-      <section className="max-w-4xl mx-auto px-6 py-12">
+      <section className="max-w-7xl mx-auto px-6 py-12">
         <Link
           to="/jobs"
           className="inline-flex items-center gap-2 text-white hover:text-white/90 mb-8 transition"
@@ -101,109 +141,108 @@ export default function JobDetail() {
         {/* Job Header */}
         <div className="bg-slate-800 border border-slate-700 rounded-lg p-8 mb-8">
           <h1 className="text-4xl font-bold text-white mb-2">
-            {job.jobTitle?.join(", ") || job.title}
+            {job.title}
           </h1>
           <p className="text-2xl text-blue-400 mb-6">
             {job.companyName || job.by}
           </p>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8 pb-8 border-b border-slate-700">
-            {job.salary && job.salary.length > 0 && (
-              <div>
-                <p className="text-slate-400 text-sm uppercase mb-1">Salary</p>
-                <p className="text-xl font-semibold text-cyan-400 flex items-center gap-2">
-                  <DollarSign className="w-5 h-5" />
-                  {job.salary.join(", ")}
-                </p>
+
+
+          {/* Location */}
+          {job.location && job.location.length > 0 && (
+            <CollapsibleSection title="Location" icon={<MapPin className="w-4 h-4 text-cyan-500" />}>
+              <div className="flex flex-wrap gap-2">
+                {job.location.map((loc, idx) => (
+                  <span
+                    key={idx}
+                    className="px-3 py-1 bg-cyan-900/40 text-cyan-300 rounded-full text-sm font-medium border border-cyan-700/30"
+                  >
+                    {loc}
+                  </span>
+                ))}
               </div>
-            )}
-            {job.location && job.location.length > 0 && (
-              <div>
-                <p className="text-slate-400 text-sm uppercase mb-1">
-                  Location
-                </p>
-                <p className="text-lg text-white flex items-center gap-2">
-                  <MapPin className="w-5 h-5 text-blue-500" />
-                  {job.location.join(", ")}
-                </p>
+            </CollapsibleSection>
+          )}
+
+          {/* Employment Type */}
+          {job.employmentType && job.employmentType.length > 0 && (
+            <CollapsibleSection title="Employment Type" icon={<Clock className="w-4 h-4 text-emerald-500" />}>
+              <div className="flex flex-wrap gap-2">
+                {job.employmentType.map((emp, idx) => (
+                  <span
+                    key={idx}
+                    className="px-3 py-1 bg-emerald-900/40 text-emerald-300 rounded-full text-sm font-medium border border-emerald-700/30"
+                  >
+                    {emp}
+                  </span>
+                ))}
               </div>
-            )}
-            {job.employmentType && job.employmentType.length > 0 && (
-              <div>
-                <p className="text-slate-400 text-sm uppercase mb-1">
-                  Employment
-                </p>
-                <p className="text-lg text-white flex items-center gap-2">
-                  <Clock className="w-5 h-5 text-blue-500" />
-                  {job.employmentType.join(", ")}
-                </p>
+            </CollapsibleSection>
+          )}
+
+          {/* Work Type */}
+          {job.jobType && job.jobType.length > 0 && (
+            <CollapsibleSection title="Work Type" icon={<Briefcase className="w-4 h-4 text-amber-500" />}>
+              <div className="flex flex-wrap gap-2">
+                {job.jobType.map((wt, idx) => (
+                  <span
+                    key={idx}
+                    className="px-3 py-1 bg-amber-900/40 text-amber-300 rounded-full text-sm font-medium border border-amber-700/30"
+                  >
+                    {wt}
+                  </span>
+                ))}
               </div>
-            )}
-            {job.jobType && job.jobType.length > 0 && (
-              <div>
-                <p className="text-slate-400 text-sm uppercase mb-1">
-                  Work Type
-                </p>
-                <p className="text-lg text-white flex items-center gap-2">
-                  <Briefcase className="w-5 h-5 text-blue-500" />
-                  {job.jobType.join(", ")}
-                </p>
+            </CollapsibleSection>
+          )}
+          {job.jobTitle && job.jobTitle.length > 0 && (
+            <CollapsibleSection title="Roles">
+              <div className="flex flex-wrap gap-2">
+                {job.jobTitle.map((role, idx) => (
+                  <span
+                    key={idx}
+                    className="px-3 py-1 bg-purple-900/40 text-purple-300 rounded-full text-sm font-medium border border-purple-700/30"
+                  >
+                    {role}
+                  </span>
+                ))}
               </div>
-            )}
-          </div>
+            </CollapsibleSection>
+          )}
 
           {/* Seniority */}
           {job.seniority && job.seniority.length > 0 && (
-            <div className="mb-6">
-              <p className="text-slate-400 text-sm uppercase mb-2">Seniority</p>
+            <CollapsibleSection title="Seniority">
               <div className="flex flex-wrap gap-2">
                 {job.seniority.map((s, idx) => (
                   <span
                     key={idx}
-                    className="px-3 py-1 bg-blue-900/40 text-blue-300 rounded-full text-sm font-medium"
+                    className="px-3 py-1 bg-blue-900/40 text-blue-300 rounded-full text-sm font-medium border border-blue-700/30"
                   >
                     {s}
                   </span>
                 ))}
               </div>
-            </div>
+            </CollapsibleSection>
           )}
 
           {/* Visa Sponsorship */}
           {job.visaSponsorship && job.visaSponsorship.length > 0 && (
-            <div className="mb-6">
-              <p className="text-slate-400 text-sm uppercase mb-2">
-                Visa Sponsorship
-              </p>
+            <CollapsibleSection title="Visa Sponsorship">
               <div className="flex flex-wrap gap-2">
                 {job.visaSponsorship.map((v, idx) => (
                   <span
                     key={idx}
-                    className="px-3 py-1 bg-green-900/40 text-green-300 rounded-full text-sm font-medium"
+                    className="px-3 py-1 bg-green-900/40 text-green-300 rounded-full text-sm font-medium border border-green-700/30"
                   >
                     {v}
                   </span>
                 ))}
               </div>
-            </div>
+            </CollapsibleSection>
           )}
 
-          {/* Apply links */}
-          {job.url && job.url.length > 0 && (
-            <div className="flex flex-wrap gap-3">
-              {job.url.map((link, idx) => (
-                <a
-                  key={idx}
-                  href={link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition font-semibold"
-                >
-                  Apply <ExternalLink className="w-4 h-4" />
-                </a>
-              ))}
-            </div>
-          )}
         </div>
 
         {/* Job Description */}
@@ -211,27 +250,27 @@ export default function JobDetail() {
           <h2 className="text-2xl font-bold text-white mb-4">
             Job Description
           </h2>
-          <p className="text-slate-300 whitespace-pre-line leading-relaxed">
-            {job.text}
-          </p>
+          <div
+            className="text-slate-300 leading-relaxed [&_p]:mb-4 last:[&_p]:mb-0 [&_a]:text-blue-400 [&_a:hover]:text-blue-300 [&_a]:underline [&_a]:font-medium"
+            dangerouslySetInnerHTML={{ __html: job.text }}
+          />
         </div>
 
         {/* Skills */}
         {job.skills && job.skills.length > 0 && (
           <div className="bg-slate-800 border border-slate-700 rounded-lg p-8 mb-8">
-            <h2 className="text-2xl font-bold text-white mb-6">
-              Required Skills
-            </h2>
-            <div className="flex flex-wrap gap-3">
-              {job.skills.map((skill, idx) => (
-                <span
-                  key={idx}
-                  className="px-4 py-2 bg-slate-700 text-slate-200 rounded-lg text-sm font-medium"
-                >
-                  {skill}
-                </span>
-              ))}
-            </div>
+            <CollapsibleSection title="Required Skills">
+              <div className="flex flex-wrap gap-3">
+                {job.skills.map((skill, idx) => (
+                  <span
+                    key={idx}
+                    className="px-4 py-2 bg-slate-700 text-slate-200 rounded-lg text-sm font-medium border border-slate-600/50"
+                  >
+                    {skill}
+                  </span>
+                ))}
+              </div>
+            </CollapsibleSection>
           </div>
         )}
 
