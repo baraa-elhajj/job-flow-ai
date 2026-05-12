@@ -196,17 +196,17 @@ export const VISA_SPONSORSHIP_REGEX =
 
 /**
  * Matches salary or compensation ranges in job postings.
- * Supports: $120k, €80,000, £50k-£70k, $100k-$150k/yr, $50/hr, ¥15M, etc.
+ * Supports: $120k, €80,000, £50k-£70k, $100k-$150k/yr, $50/hr, etc.
  *
  * Named capture groups:
  *  - currency: the currency symbol ($, €, £, ¥, ₹, CHF, CAD, AUD, SGD, SEK, DKK, NOK)
  *  - min:      the lower bound number
  *  - max:      the upper bound number (if a range)
- *  - mult:     optional multiplier suffix (k, m)
+ *  - mult:     optional multiplier suffix (k)
  *  - period:   optional period (yr, year, mo, month, hr, hour)
  */
 export const SALARY_REGEX =
-    /(?<currency>\$|€|£|¥|₹|CHF|CAD|AUD|SGD|SEK|DKK|NOK)\s*(?<min>\d{1,3}(?:,\d{3})*(?:\.\d+)?)(?<mult>[km])?(?:\s*[-–to]+\s*(?:\k<currency>)?\s*(?<max>\d{1,3}(?:,\d{3})*(?:\.\d+)?)(?:\k<mult>|(?<mult2>[km]))?)?(?:\s*\/?\s*(?<period>yr|year|yearly|annually|mo|month|monthly|hr|hour|hourly))?/gi;
+    /(?<currency>\$|€|£|¥|₹|CHF|CAD|AUD|SGD|SEK|DKK|NOK)\s*(?<min>\d{1,3}(?:,\d{3})?|\d{1,6})(?:\.\d+)?(?<mult>k)?(?:\s*[-–to]+\s*(?:\k<currency>)?\s*(?<max>\d{1,3}(?:,\d{3})?|\d{1,6})(?:\.\d+)?(?:\k<mult>|(?<mult2>k))?)?(?:\s*\/?\s*(?<period>yr|year|yearly|annually|mo|month|monthly|hr|hour|hourly))?(?![a-zA-Z]|\d|,\d|\.\d)/gi;
 
 
 export const EMPLOYMENT_TYPE_REGEX =

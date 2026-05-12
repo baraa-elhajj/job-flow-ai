@@ -48,8 +48,9 @@ export class GroqCompanyExtractor {
                         {
                             role: "user",
                             content: `Extract the company name based on the info provided. The primary source for the company name is the Title segment. The provided Links and Emails are just to help you gain more confidence in identifying the correct name.
-WARNING: Do NOT return the names of Applicant Tracking Systems (ATS) or job boards that might appear in URLs (e.g., Dover, Ashby, Greenhouse, Lever, Workable, Y Combinator, etc.). The actual company name is usually the main subject of the Title segment or a specific path parameter/subdomain in the URL.
+WARNING: Do NOT return the names of Applicant Tracking Systems (ATS) or job boards that might appear in URLs (e.g., Dover, Ashby, Greenhouse, Lever, Workable, Y Combinator, etc.).
 Remove any job titles, locations, work types (remote/onsite/hybrid), employment types (full-time/part-time/contract), or other metadata. If there are no links and emails, guess the company name from the title only. If you cannot find any result, return None.
+The company name is in the title segment links just to help infering, 
 
 Title segment: "${firstSection}"
 Links: ${links.length > 0 ? links.join(', ') : 'None'}

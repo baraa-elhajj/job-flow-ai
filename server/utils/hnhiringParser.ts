@@ -94,6 +94,31 @@ export class HNHiringParser {
         }
     }
 
+    hasAnyRegexMatch(s: string): boolean {
+        const regexes = [
+            regexUtils.URL_REGEX,
+            regexUtils.VISA_SPONSORSHIP_REGEX,
+            regexUtils.SALARY_REGEX,
+            regexUtils.EMPLOYMENT_TYPE_REGEX,
+            regexUtils.WORK_TYPE_REGEX,
+            regexUtils.COUNTRY_REGEX,
+            regexUtils.US_CITY_REGEX,
+            regexUtils.TECH_SKILLS_REGEX,
+            regexUtils.SENIORITY_REGEX,
+            regexUtils.JOB_ROLE_REGEX
+        ];
+
+        for (const regex of regexes) {
+            regex.lastIndex = 0;
+            if (regex.test(s)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+
     async parseHnJob(title: string, description: string) {
         const links = this.getLinksFromDesc(description);
         const mail = this.getMailsFromDesc(description);
@@ -106,11 +131,17 @@ export class HNHiringParser {
         }
 
         if (titleParts.length != 0) {
+            const firstPart = titleParts[0]!;
 
-            const cpname = await this.llm.extractCompanyName(titleParts[0]!, links, mail);
+            if (!this.hasAnyRegexMatch(firstPart))
+                this.result.companyName = firstPart;
 
-            if (cpname != null) {
-                this.result.companyName = cpname;
+            else {
+                const cpname = await this.llm.extractCompanyName(firstPart, links, mail);
+
+                if (cpname != null) {
+                    this.result.companyName = cpname;
+                }
             }
         }
 

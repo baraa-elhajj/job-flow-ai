@@ -40,15 +40,15 @@ async function runTest() {
         console.log(`Found ${rawJobs.length} raw jobs. Starting enrichment...`);
 
         const parser = new HNHiringParser();
-        const enrichedJobs = rawJobs.map((job) => {
-            const parsed = parser.parseHnTitle(job.title || '');
+        const enrichedJobs = await Promise.all(rawJobs.map(async (job) => {
+            const parsed = await parser.parseHnJob(job.title, job.text);
             const enrichedFields = initializeEnrichedFields(parsed);
 
             return {
                 ...job,
                 ...enrichedFields,
             };
-        });
+        }));
 
         // Switch to parsedHNJobs collection
         const db = mongoose.connection.db;

@@ -8,8 +8,8 @@ async function runTest() {
         console.log("Connecting to database...");
         await connectDB();
 
-        console.log("Running scrapeAndStoreHNHiringJobs('april', 2026)...");
-        await scrapeAndStoreHNHiringJobs('april', 2026);
+        console.log("Running scrapeAndStoreHNHiringJobs('may', 2026)...");
+        await scrapeAndStoreHNHiringJobs('mays', 2026);
 
         process.exit(0);
     } catch (error) {
