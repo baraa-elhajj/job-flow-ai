@@ -51,11 +51,11 @@ function CollapsibleSection({
         className="flex items-center gap-2 w-full text-left group"
       >
         {icon}
-        <p className="text-slate-400 text-sm uppercase tracking-wider font-semibold group-hover:text-slate-300 transition-colors">
+        <p className="text-gruvbox-fg4 text-sm uppercase tracking-wider font-semibold group-hover:text-gruvbox-fg2 transition-colors">
           {title}
         </p>
         <ChevronDown
-          className={`w-4 h-4 text-slate-500 transition-transform duration-300 ${open ? "rotate-180" : "rotate-0"
+          className={`w-4 h-4 text-gruvbox-gray transition-transform duration-300 ${open ? "rotate-180" : "rotate-0"
             }`}
         />
       </button>
@@ -98,27 +98,27 @@ export default function JobDetail() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
-        <Loader2 className="w-10 h-10 text-blue-400 animate-spin" />
+      <div className="min-h-screen bg-gruvbox-bg flex items-center justify-center">
+        <Loader2 className="w-10 h-10 text-gruvbox-orange_light animate-spin" />
       </div>
     );
   }
 
   if (error || !job) {
     return (
-      <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center px-6 text-center">
-        <h1 className="text-3xl md:text-4xl font-bold text-white mb-4">
+      <div className="min-h-screen bg-gruvbox-bg flex flex-col items-center justify-center px-6 text-center">
+        <h1 className="text-3xl md:text-4xl font-bold text-gruvbox-fg0 mb-4">
           Job Not Found
         </h1>
 
-        <p className="text-slate-400 max-w-md mb-8 leading-relaxed">
+        <p className="text-gruvbox-fg4 max-w-md mb-8 leading-relaxed">
           {error ||
             "The job you're looking for does not exist. It might have been removed or the ID is incorrect."}
         </p>
 
         <Link
           to="/jobs"
-          className="inline-flex items-center gap-2 bg-white text-slate-900 px-6 py-3 rounded-lg font-semibold hover:bg-white/80 transition-colors duration-300"
+          className="inline-flex items-center gap-2 bg-gruvbox-fg0 text-gruvbox-bg0_h px-6 py-3 rounded-lg font-semibold hover:bg-gruvbox-fg0/80 transition-colors duration-300"
         >
           <ArrowLeft size={18} />
           Back to Jobs List
@@ -128,22 +128,22 @@ export default function JobDetail() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900">
+    <div className="min-h-screen bg-gruvbox-bg">
       <section className="max-w-7xl mx-auto px-6 py-12">
         <Link
           to="/jobs"
-          className="inline-flex items-center gap-2 text-white hover:text-white/90 mb-8 transition"
+          className="inline-flex items-center gap-2 text-gruvbox-fg0 hover:text-gruvbox-fg0/90 mb-8 transition"
         >
           <ArrowLeft className="w-5 h-5" />
           Back to Jobs List
         </Link>
 
         {/* Job Header */}
-        <div className="bg-slate-800 border border-slate-700 rounded-lg p-8 mb-8">
-          <h1 className="text-4xl font-bold text-white mb-2">
+        <div className="bg-gruvbox-bg1 border border-gruvbox-bg3 rounded-lg p-8 mb-8">
+          <h1 className="text-4xl font-bold text-gruvbox-fg0 mb-2">
             {job.title}
           </h1>
-          <p className="text-2xl text-blue-400 mb-6">
+          <p className="text-2xl text-gruvbox-orange_light mb-6">
             {job.companyName || job.by}
           </p>
 
@@ -151,12 +151,12 @@ export default function JobDetail() {
 
           {/* Location */}
           {job.location && job.location.length > 0 && (
-            <CollapsibleSection title="Location" icon={<MapPin className="w-4 h-4 text-cyan-500" />}>
+            <CollapsibleSection title="Location" icon={<MapPin className="w-4 h-4 text-gruvbox-aqua" />}>
               <div className="flex flex-wrap gap-2">
                 {job.location.map((loc, idx) => (
                   <span
                     key={idx}
-                    className="px-3 py-1 bg-cyan-900/40 text-cyan-300 rounded-full text-sm font-medium border border-cyan-700/30"
+                    className="px-3 py-1 bg-gruvbox-aqua/20 text-gruvbox-aqua_light rounded-full text-sm font-medium border border-gruvbox-aqua/30"
                   >
                     {loc}
                   </span>
@@ -167,12 +167,12 @@ export default function JobDetail() {
 
           {/* Employment Type */}
           {job.employmentType && job.employmentType.length > 0 && (
-            <CollapsibleSection title="Employment Type" icon={<Clock className="w-4 h-4 text-emerald-500" />}>
+            <CollapsibleSection title="Employment Type" icon={<Clock className="w-4 h-4 text-gruvbox-green" />}>
               <div className="flex flex-wrap gap-2">
                 {job.employmentType.map((emp, idx) => (
                   <span
                     key={idx}
-                    className="px-3 py-1 bg-emerald-900/40 text-emerald-300 rounded-full text-sm font-medium border border-emerald-700/30"
+                    className="px-3 py-1 bg-gruvbox-green/20 text-gruvbox-green_light rounded-full text-sm font-medium border border-gruvbox-green/30"
                   >
                     {emp}
                   </span>
@@ -183,12 +183,12 @@ export default function JobDetail() {
 
           {/* Work Type */}
           {job.jobType && job.jobType.length > 0 && (
-            <CollapsibleSection title="Work Type" icon={<Briefcase className="w-4 h-4 text-amber-500" />}>
+            <CollapsibleSection title="Work Type" icon={<Briefcase className="w-4 h-4 text-gruvbox-yellow" />}>
               <div className="flex flex-wrap gap-2">
                 {job.jobType.map((wt, idx) => (
                   <span
                     key={idx}
-                    className="px-3 py-1 bg-amber-900/40 text-amber-300 rounded-full text-sm font-medium border border-amber-700/30"
+                    className="px-3 py-1 bg-gruvbox-yellow/20 text-gruvbox-yellow_light rounded-full text-sm font-medium border border-gruvbox-yellow/30"
                   >
                     {wt}
                   </span>
@@ -202,7 +202,7 @@ export default function JobDetail() {
                 {job.jobTitle.map((role, idx) => (
                   <span
                     key={idx}
-                    className="px-3 py-1 bg-purple-900/40 text-purple-300 rounded-full text-sm font-medium border border-purple-700/30"
+                    className="px-3 py-1 bg-gruvbox-purple/20 text-gruvbox-purple_light rounded-full text-sm font-medium border border-gruvbox-purple/30"
                   >
                     {role}
                   </span>
@@ -218,7 +218,7 @@ export default function JobDetail() {
                 {job.seniority.map((s, idx) => (
                   <span
                     key={idx}
-                    className="px-3 py-1 bg-blue-900/40 text-blue-300 rounded-full text-sm font-medium border border-blue-700/30"
+                    className="px-3 py-1 bg-gruvbox-orange/20 text-gruvbox-orange_light rounded-full text-sm font-medium border border-gruvbox-orange/30"
                   >
                     {s}
                   </span>
@@ -234,7 +234,7 @@ export default function JobDetail() {
                 {job.visaSponsorship.map((v, idx) => (
                   <span
                     key={idx}
-                    className="px-3 py-1 bg-green-900/40 text-green-300 rounded-full text-sm font-medium border border-green-700/30"
+                    className="px-3 py-1 bg-gruvbox-green/20 text-gruvbox-green_light rounded-full text-sm font-medium border border-gruvbox-green/30"
                   >
                     {v}
                   </span>
@@ -246,25 +246,25 @@ export default function JobDetail() {
         </div>
 
         {/* Job Description */}
-        <div className="bg-slate-800 border border-slate-700 rounded-lg p-8 mb-8">
-          <h2 className="text-2xl font-bold text-white mb-4">
+        <div className="bg-gruvbox-bg1 border border-gruvbox-bg3 rounded-lg p-8 mb-8">
+          <h2 className="text-2xl font-bold text-gruvbox-fg0 mb-4">
             Job Description
           </h2>
           <div
-            className="text-slate-300 leading-relaxed [&_p]:mb-4 last:[&_p]:mb-0 [&_a]:text-blue-400 [&_a:hover]:text-blue-300 [&_a]:underline [&_a]:font-medium"
+            className="text-gruvbox-fg2 leading-relaxed [&_p]:mb-4 last:[&_p]:mb-0 [&_a]:text-gruvbox-orange_light [&_a:hover]:text-gruvbox-orange_light [&_a]:underline [&_a]:font-medium"
             dangerouslySetInnerHTML={{ __html: job.text }}
           />
         </div>
 
         {/* Skills */}
         {job.skills && job.skills.length > 0 && (
-          <div className="bg-slate-800 border border-slate-700 rounded-lg p-8 mb-8">
+          <div className="bg-gruvbox-bg1 border border-gruvbox-bg3 rounded-lg p-8 mb-8">
             <CollapsibleSection title="Required Skills">
               <div className="flex flex-wrap gap-3">
                 {job.skills.map((skill, idx) => (
                   <span
                     key={idx}
-                    className="px-4 py-2 bg-slate-700 text-slate-200 rounded-lg text-sm font-medium border border-slate-600/50"
+                    className="px-4 py-2 bg-gruvbox-bg2 text-gruvbox-fg1 rounded-lg text-sm font-medium border border-gruvbox-bg4/50"
                   >
                     {skill}
                   </span>
@@ -275,9 +275,9 @@ export default function JobDetail() {
         )}
 
         {/* Meta info */}
-        <div className="text-center text-slate-500 text-sm mt-8">
-          Posted by <span className="text-slate-400">{job.by}</span> on{" "}
-          <span className="text-slate-400">{job.datePosted}</span>
+        <div className="text-center text-gruvbox-gray text-sm mt-8">
+          Posted by <span className="text-gruvbox-fg4">{job.by}</span> on{" "}
+          <span className="text-gruvbox-fg4">{job.datePosted}</span>
         </div>
       </section>
     </div>

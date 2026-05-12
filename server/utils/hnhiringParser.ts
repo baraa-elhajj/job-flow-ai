@@ -15,12 +15,9 @@ type HNParseResult = {
 }
 
 export class HNHiringParser {
-
-    result: HNParseResult;
     llm: GroqCompanyExtractor;
 
     constructor() {
-        this.result = {};
         this.llm = new GroqCompanyExtractor();
     }
 
@@ -42,7 +39,7 @@ export class HNHiringParser {
         return Array.from(new Set(matches.map(m => m.trim())));
     }
 
-    executeRegexOnString(s: string, isTitle: boolean = false) {
+    executeRegexOnString(s: string, result: HNParseResult, isTitle: boolean = false) {
         const REGEX_MAPPING: { regex: RegExp; field: keyof HNParseResult; removeMatch?: boolean }[] = [
             { regex: regexUtils.URL_REGEX, field: 'url', removeMatch: true },
             { regex: regexUtils.VISA_SPONSORSHIP_REGEX, field: 'visaSponsorship', removeMatch: true },
@@ -59,7 +56,7 @@ export class HNHiringParser {
         for (const mapping of REGEX_MAPPING) {
             // If we are parsing the description (not the title) and we already found location or jobType in the title, skip them.
             if (!isTitle && (mapping.field === 'location' || mapping.field === 'jobType')) {
-                const existingList = this.result[mapping.field];
+                const existingList = result[mapping.field];
                 if (existingList && existingList.length > 0) {
                     continue;
                 }
@@ -73,12 +70,12 @@ export class HNHiringParser {
                     .filter(Boolean);
 
                 if (cleanedMatches.length > 0) {
-                    if (!this.result[mapping.field]) {
+                    if (!result[mapping.field]) {
                         // TypeScript doesn't dynamically know we're addressing array fields here
-                        (this.result[mapping.field] as string[]) = [];
+                        (result[mapping.field] as string[]) = [];
                     }
 
-                    const targetArray = this.result[mapping.field] as string[];
+                    const targetArray = result[mapping.field] as string[];
                     for (const matchStr of cleanedMatches) {
                         // Only add if not entirely duplicated
                         if (!targetArray.includes(matchStr)) {
@@ -123,8 +120,7 @@ export class HNHiringParser {
         const links = this.getLinksFromDesc(description);
         const mail = this.getMailsFromDesc(description);
 
-        // Reset result on each call so the class instance can be re-used safely
-        this.result = {};
+        const result: HNParseResult = {};
         let titleParts = title.split("|").map(p => p.trim()).filter(Boolean) as string[];
         if (titleParts.length === 1) {
             titleParts = title.split("\\").map(p => p.trim()).filter(Boolean) as string[];
@@ -134,13 +130,13 @@ export class HNHiringParser {
             const firstPart = titleParts[0]!;
 
             if (!this.hasAnyRegexMatch(firstPart))
-                this.result.companyName = firstPart;
+                result.companyName = firstPart;
 
             else {
                 const cpname = await this.llm.extractCompanyName(firstPart, links, mail);
 
                 if (cpname != null) {
-                    this.result.companyName = cpname;
+                    result.companyName = cpname;
                 }
             }
         }
@@ -148,20 +144,20 @@ export class HNHiringParser {
 
         for (let i = 0; i < titleParts.length; i++) {
             let p = titleParts[i]!;
-            this.executeRegexOnString(p, true);
+            this.executeRegexOnString(p, result, true);
         }
 
-        this.executeRegexOnString(description, false);
+        this.executeRegexOnString(description, result, false);
 
 
-        for (const field in this.result) {
+        for (const field in result) {
             const key = field as keyof HNParseResult;
-            const list = this.result[key];
+            const list = result[key];
 
             if (Array.isArray(list)) {
                 const normalize = (str: string) => str.toLowerCase().replace(/[^a-z0-9+#]/g, '');
 
-                (this.result[key] as string[]) = list.filter((currentStr: string, i: number) => {
+                (result[key] as string[]) = list.filter((currentStr: string, i: number) => {
                     const normCurrent = normalize(currentStr);
                     return !list.some((otherStr: string, j: number) => {
                         return i !== j && normalize(otherStr).includes(normCurrent);
@@ -170,7 +166,7 @@ export class HNHiringParser {
             }
         }
 
-        return this.result;
+        return result;
     }
 }
 
