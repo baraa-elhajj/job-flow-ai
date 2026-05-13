@@ -146,7 +146,8 @@ export const TECH_SKILLS = [
     "Linux", "Unix", "macOS", "Windows",
     "TCP/IP", "HTTP", "HTTPS", "OAuth", "JWT", "OpenID",
     "Microservices", "Serverless", "Event-Driven", "CQRS", "DDD",
-    "Agile", "Scrum", "Kanban", "Jira", "Confluence"
+    "Agile", "Scrum", "Kanban", "Jira", "Confluence",
+    "AI"
 ];
 
 // Build regex — note C++ and C# are pre-escaped in the array
@@ -194,19 +195,19 @@ export const SENIORITY_REGEX = new RegExp(`\\b(${SENIORITY_LEVELS.join('|')}|${Y
 export const VISA_SPONSORSHIP_REGEX =
     /\b(?<signal>no\s+)?(?:visa\s+sponsorship|sponsorship\s+available|sponsor(?:s|ed|ing)?\s+(?:visa|work\s+visa|h[\-\s]?1b|h[\-\s]?1|green\s+card|work\s+permit)|work\s+(?:visa|permit)\s+(?:provided|sponsored|available)|h[\-\s]?1b\s+(?:transfer|sponsorship|sponsor)|immigration\s+support|relocation\s+(?:package|assistance|support)|open\s+to\s+(?:visa|sponsorship))\b/gi;
 
-/**
- * Matches salary or compensation ranges in job postings.
- * Supports: $120k, €80,000, £50k-£70k, $100k-$150k/yr, $50/hr, etc.
- *
- * Named capture groups:
- *  - currency: the currency symbol ($, €, £, ¥, ₹, CHF, CAD, AUD, SGD, SEK, DKK, NOK)
- *  - min:      the lower bound number
- *  - max:      the upper bound number (if a range)
- *  - mult:     optional multiplier suffix (k)
- *  - period:   optional period (yr, year, mo, month, hr, hour)
- */
-export const SALARY_REGEX =
-    /(?<currency>\$|€|£|¥|₹|CHF|CAD|AUD|SGD|SEK|DKK|NOK)\s*(?<min>\d{1,3}(?:,\d{3})?|\d{1,6})(?:\.\d+)?(?<mult>k)?(?:\s*[-–to]+\s*(?:\k<currency>)?\s*(?<max>\d{1,3}(?:,\d{3})?|\d{1,6})(?:\.\d+)?(?:\k<mult>|(?<mult2>k))?)?(?:\s*\/?\s*(?<period>yr|year|yearly|annually|mo|month|monthly|hr|hour|hourly))?(?![a-zA-Z]|\d|,\d|\.\d)/gi;
+// /**
+//  * Matches salary or compensation ranges in job postings.
+//  * Supports: $120k, €80,000, £50k-£70k, $100k-$150k/yr, $50/hr, etc.
+//  *
+//  * Named capture groups:
+//  *  - currency: the currency symbol ($, €, £, ¥, ₹, CHF, CAD, AUD, SGD, SEK, DKK, NOK)
+//  *  - min:      the lower bound number
+//  *  - max:      the upper bound number (if a range)
+//  *  - mult:     optional multiplier suffix (k)
+//  *  - period:   optional period (yr, year, mo, month, hr, hour)
+//  */
+// export const SALARY_REGEX =
+//     /(?<currency>\$|€|£|¥|₹|CHF|CAD|AUD|SGD|SEK|DKK|NOK)\s*(?<min>\d{1,3}(?:,\d{3})?|\d{1,6})(?:\.\d+)?(?<mult>k)?(?:\s*[-–to]+\s*(?:\k<currency>)?\s*(?<max>\d{1,3}(?:,\d{3})?|\d{1,6})(?:\.\d+)?(?:\k<mult>|(?<mult2>k))?)?(?:\s*\/?\s*(?<period>yr|year|yearly|annually|mo|month|monthly|hr|hour|hourly))?(?![a-zA-Z]|\d|,\d|\.\d)/gi;
 
 
 export const EMPLOYMENT_TYPE_REGEX =
@@ -217,52 +218,97 @@ export const EMPLOYMENT_TYPE_REGEX =
 // ---------------------------------------------------------------------------
 
 /**
- * Suffix words that reliably indicate a job role when preceded by qualifiers.
- * Used to build a broad catch-all pattern so we don't need to enumerate every
- * possible "<Qualifier> Engineer" combination.
+ * Curated list of job titles commonly found in tech job postings.
+ * The regex is built from this list (simple alternation with word boundaries),
+ * similar to TECH_SKILLS and COUNTRIES_AND_REGIONS.
  */
-const ROLE_SUFFIX_WORDS = [
-    "engineer", "developer", "programmer",
-    "architect", "designer", "manager",
-    "scientist", "analyst", "researcher",
-    "lead", "director",
-    "writer", "advocate", "evangelist",
-    "specialist", "consultant", "coordinator",
-    "strategist", "administrator", "operator",
-    "technician", "editor", "officer",
+export const JOB_TITLES = [
+    // ── Engineering ─────────────────────────────────────────────────────
+    "Software Engineer", "Software Developer",
+    "Backend Engineer", "Backend Developer",
+    "Frontend Engineer", "Frontend Developer",
+    "Full Stack Engineer", "Full Stack Developer", "Full-Stack Engineer", "Full-Stack Developer",
+    "Fullstack Engineer", "Fullstack Developer",
+    "Mobile Engineer", "Mobile Developer",
+    "iOS Engineer", "iOS Developer",
+    "Android Engineer", "Android Developer",
+    "Web Developer", "Web Engineer",
+    "Platform Engineer", "Platform Developer", "Platform Operations Engineer",
+    "Infrastructure Engineer",
+    "Systems Engineer", "Systems Developer",
+    "Embedded Engineer", "Embedded Developer", "Embedded Software Engineer",
+    "Firmware Engineer",
+    "DevOps Engineer", "DevSecOps Engineer",
+    "Site Reliability Engineer", "SRE",
+    "Cloud Engineer",
+    "Security Engineer", "Application Security Engineer",
+    "Network Engineer",
+    "QA Engineer", "Test Engineer", "SDET", "Quality Assurance Engineer",
+    "Release Engineer", "Build Engineer",
+    "Solutions Engineer", "Sales Engineer",
+    "Support Engineer",
+    "Machine Learning Engineer", "ML Engineer",
+    "AI Engineer", "AI Operations Lead", "AI Operations Engineer",
+    "Data Engineer",
+    "Blockchain Engineer", "Smart Contract Engineer",
+    "Compiler Engineer",
+    "Graphics Engineer", "Game Engineer", "Game Developer",
+    "Founding Engineer", "Product Engineer",
+    "Staff Engineer", "Principal Engineer",
+
+    // ── Architecture ────────────────────────────────────────────────────
+    "Software Architect", "Solutions Architect", "Enterprise Architect",
+    "Cloud Architect", "Data Architect", "Security Architect",
+    "System Architect",
+
+    // ── Data & Analytics ────────────────────────────────────────────────
+    "Data Scientist", "Data Analyst", "Business Analyst",
+    "Research Scientist", "Research Engineer",
+    "Machine Learning Scientist",
+    "Business Intelligence Analyst", "BI Analyst",
+    "Analytics Engineer",
+
+    // ── Design ──────────────────────────────────────────────────────────
+    "UX Designer", "UI Designer", "UX/UI Designer", "UI/UX Designer",
+    "Product Designer", "Interaction Designer", "Design Engineer",
+    "Visual Designer", "Graphic Designer",
+    "UX Researcher",
+
+    // ── Product & Project ───────────────────────────────────────────────
+    "Product Manager", "Program Manager", "Project Manager",
+    "Technical Program Manager", "TPM",
+    "Product Owner", "Scrum Master",
+
+    // ── Management & Leadership ─────────────────────────────────────────
+    "Engineering Manager", "Engineering Lead",
+    "Tech Lead", "Team Lead", "Technical Lead",
+    "Director of Engineering", "VP of Engineering",
+    "Head of Engineering", "Head of Product", "Head of Design",
+    "CTO", "Chief Technology Officer",
+    "VP of Product",
+
+    // ── DevRel & Content ────────────────────────────────────────────────
+    "Developer Advocate", "Developer Evangelist", "DevRel",
+    "Technical Writer",
+
+    // ── IT & Operations ─────────────────────────────────────────────────
+    "System Administrator", "Database Administrator", "DBA",
+    "IT Administrator", "Network Administrator", "IT Support",
+
+    // ── Cybersecurity ───────────────────────────────────────────────────
+    "Cybersecurity Analyst", "Cybersecurity Engineer",
+    "Penetration Tester", "Security Analyst",
+
+    // ── Shorthand / Stack Labels (standalone) ───────────────────────────
+    "Full-Stack", "Full Stack", "Fullstack",
+    "Frontend", "Front-End", "Front End",
+    "Backend", "Back-End", "Back End",
 ];
 
-/**
- * Two-tier job role patterns:
- *
- * Tier 1 – Specific shorthand / stack labels that don't end with a standard
- *          role-suffix word (e.g. "full-stack", "SRE", "devrel").
- *
- * Tier 2 – Broad catch-all: 0-4 optional qualifier words followed by any
- *          role-suffix word.  Handles the long tail of titles like
- *          "Founding Engineer", "BDR Engineer", "AI Operations Lead",
- *          "Performance Marketing Manager", "Compiler Engineer", etc.
- */
-const JOB_ROLE_PATTERNS = [
-    // ── Tier 1: specific shorthand roles ────────────────────────────────
-    // Stack descriptors (these imply an engineering role on their own)
-    "full[\\s-]?stack", "front[\\s-]?end", "back[\\s-]?end",
+// Sort longest-first so "Full Stack Engineer" matches before "Engineer"
+const sortedJobTitles = [...JOB_TITLES].sort((a, b) => b.length - a.length);
 
-    // Acronym & short-form roles
-    "sre", "devrel", "pm", "dba",
-    "cybersecurity",
+// Escape regex special characters in titles (e.g. "C++", "UX/UI")
+const escapedTitles = sortedJobTitles.map(t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
 
-    // Leadership titles with "of" (Head of Engineering, VP of Product, etc.)
-    "head\\s+of\\s+\\w+(?:\\s+\\w+)?",
-    "vp\\s+(?:of\\s+)?\\w+(?:\\s+\\w+)?",
-
-    // ── Tier 2: broad <qualifiers?> + <role suffix> ─────────────────────
-    // Matches 0-4 qualifier words (letters, digits, +, #) separated by
-    // whitespace, /, &, or - then a role suffix word.
-    // Examples: "Engineer", "Software Engineer", "Senior Backend Developer",
-    //           "AI/ML Research Scientist", "Founding Engineer"
-    // Does not allow commas or periods to prevent matching whole sentences.
-    `(?:[a-z][a-z0-9+#]*(?:[\\s/&\\-]+[a-z][a-z0-9+#]*){0,4}\\s+)?(?:${ROLE_SUFFIX_WORDS.join("|")})`,
-];
-
-export const JOB_ROLE_REGEX = new RegExp(`\\b(${JOB_ROLE_PATTERNS.join("|")})\\b`, "gi");
+export const JOB_ROLE_REGEX = new RegExp(`\\b(${escapedTitles.join("|")})\\b`, "gi");

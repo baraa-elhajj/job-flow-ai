@@ -1,7 +1,7 @@
 import * as regexUtils from "./regexUtils.js";
-import { GroqCompanyExtractor } from "./LLMHnHiringParserHelpers.js";
+import { DeepSeekCompanyExtractor } from "./LLMHnHiringParserHelpers.js";
 
-type HNParseResult = {
+export type HNParseResult = {
     companyName?: string;
     jobTitle?: string[];
     jobType?: string[];
@@ -15,13 +15,10 @@ type HNParseResult = {
 }
 
 export class HNHiringParser {
-
-    result: HNParseResult;
-    llm: GroqCompanyExtractor;
+    llm: DeepSeekCompanyExtractor;
 
     constructor() {
-        this.result = {};
-        this.llm = new GroqCompanyExtractor();
+        this.llm = new DeepSeekCompanyExtractor();
     }
 
     getLinksFromDesc(description: string): string[] {
@@ -42,11 +39,11 @@ export class HNHiringParser {
         return Array.from(new Set(matches.map(m => m.trim())));
     }
 
-    executeRegexOnString(s: string, isTitle: boolean = false) {
+    executeRegexOnString(s: string, result: HNParseResult, isTitle: boolean = false) {
         const REGEX_MAPPING: { regex: RegExp; field: keyof HNParseResult; removeMatch?: boolean }[] = [
             { regex: regexUtils.URL_REGEX, field: 'url', removeMatch: true },
             { regex: regexUtils.VISA_SPONSORSHIP_REGEX, field: 'visaSponsorship', removeMatch: true },
-            { regex: regexUtils.SALARY_REGEX, field: 'salary', removeMatch: true },
+            // { regex: regexUtils.SALARY_REGEX, field: 'salary', removeMatch: true },
             { regex: regexUtils.EMPLOYMENT_TYPE_REGEX, field: 'employmentType', removeMatch: true },
             { regex: regexUtils.WORK_TYPE_REGEX, field: 'jobType', removeMatch: true },
             { regex: regexUtils.COUNTRY_REGEX, field: 'location', removeMatch: true },
@@ -56,16 +53,34 @@ export class HNHiringParser {
             { regex: regexUtils.JOB_ROLE_REGEX, field: 'jobTitle' }
         ];
 
+        let matched = false;
+
         for (const mapping of REGEX_MAPPING) {
-            // If we are parsing the description (not the title) and we already found location or jobType in the title, skip them.
-            if (!isTitle && (mapping.field === 'location' || mapping.field === 'jobType')) {
-                const existingList = this.result[mapping.field];
+            if (!isTitle && (mapping.field === 'location')) {
+                const existingList = [...(result["location"] || []), ...(result["jobType"] || [])];
                 if (existingList && existingList.length > 0) {
                     continue;
                 }
             }
 
+            const normalize = (str: string) => str.toLowerCase().replace(/[^a-z0-9+#]/g, '');
+
             mapping.regex.lastIndex = 0;
+
+            if (isTitle && (mapping.field === 'jobTitle') && !matched) {
+                const m = s.match(mapping.regex);
+                if (m && m.length > 0) {
+
+                    if (!result[mapping.field]) {
+                        (result[mapping.field] as string[]) = [];
+                    }
+
+                    (result[mapping.field] as string[]).push(s.trim().replace(/^[,\s]+|[,\s]+$/g, ''));
+                }
+                continue;
+            }
+
+
             const matches = s.match(mapping.regex);
             if (matches) {
                 const cleanedMatches = matches
@@ -73,15 +88,14 @@ export class HNHiringParser {
                     .filter(Boolean);
 
                 if (cleanedMatches.length > 0) {
-                    if (!this.result[mapping.field]) {
-                        // TypeScript doesn't dynamically know we're addressing array fields here
-                        (this.result[mapping.field] as string[]) = [];
+                    if (!result[mapping.field]) {
+                        (result[mapping.field] as string[]) = [];
                     }
 
-                    const targetArray = this.result[mapping.field] as string[];
+                    const targetArray = result[mapping.field] as string[];
                     for (const matchStr of cleanedMatches) {
                         // Only add if not entirely duplicated
-                        if (!targetArray.includes(matchStr)) {
+                        if (!targetArray.some(m => normalize(m).includes(normalize(matchStr)))) {
                             targetArray.push(matchStr);
                         }
                     }
@@ -89,6 +103,7 @@ export class HNHiringParser {
 
                 if (mapping.removeMatch) {
                     s = s.replace(mapping.regex, "");
+                    matched = true;
                 }
             }
         }
@@ -98,7 +113,7 @@ export class HNHiringParser {
         const regexes = [
             regexUtils.URL_REGEX,
             regexUtils.VISA_SPONSORSHIP_REGEX,
-            regexUtils.SALARY_REGEX,
+            // regexUtils.SALARY_REGEX,
             regexUtils.EMPLOYMENT_TYPE_REGEX,
             regexUtils.WORK_TYPE_REGEX,
             regexUtils.COUNTRY_REGEX,
@@ -123,8 +138,7 @@ export class HNHiringParser {
         const links = this.getLinksFromDesc(description);
         const mail = this.getMailsFromDesc(description);
 
-        // Reset result on each call so the class instance can be re-used safely
-        this.result = {};
+        const result: HNParseResult = {};
         let titleParts = title.split("|").map(p => p.trim()).filter(Boolean) as string[];
         if (titleParts.length === 1) {
             titleParts = title.split("\\").map(p => p.trim()).filter(Boolean) as string[];
@@ -134,13 +148,13 @@ export class HNHiringParser {
             const firstPart = titleParts[0]!;
 
             if (!this.hasAnyRegexMatch(firstPart))
-                this.result.companyName = firstPart;
+                result.companyName = firstPart;
 
             else {
                 const cpname = await this.llm.extractCompanyName(firstPart, links, mail);
 
                 if (cpname != null) {
-                    this.result.companyName = cpname;
+                    result.companyName = cpname;
                 }
             }
         }
@@ -148,12 +162,29 @@ export class HNHiringParser {
 
         for (let i = 0; i < titleParts.length; i++) {
             let p = titleParts[i]!;
-            this.executeRegexOnString(p, true);
+            this.executeRegexOnString(p, result, true);
         }
 
-        this.executeRegexOnString(description, false);
+        this.executeRegexOnString(description, result, false);
 
-        return this.result;
+
+        for (const field in result) {
+            const key = field as keyof HNParseResult;
+            const list = result[key];
+
+            if (Array.isArray(list)) {
+                const normalize = (str: string) => str.toLowerCase().replace(/[^a-z0-9+#]/g, '');
+
+                (result[key] as string[]) = list.filter((currentStr: string, i: number) => {
+                    const normCurrent = (currentStr);
+                    return !list.some((otherStr: string, j: number) => {
+                        return i !== j && normalize(otherStr).includes(normCurrent);
+                    });
+                });
+            }
+        }
+
+        return result;
     }
 }
 
