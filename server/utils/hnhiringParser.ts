@@ -63,16 +63,24 @@ export class HNHiringParser {
                 }
             }
 
-            if (!isTitle && (mapping.field === 'jobTitle') && !matched) {
-                if (!result[mapping.field]) {
-                    (result[mapping.field] as string[]) = [];
-                }
+            const normalize = (str: string) => str.toLowerCase().replace(/[^a-z0-9+#]/g, '');
 
-                (result[mapping.field] as string[]).push(s.trim());
+            mapping.regex.lastIndex = 0;
+
+            if (isTitle && (mapping.field === 'jobTitle') && !matched) {
+                const m = s.match(mapping.regex);
+                if (m && m.length > 0) {
+
+                    if (!result[mapping.field]) {
+                        (result[mapping.field] as string[]) = [];
+                    }
+
+                    (result[mapping.field] as string[]).push(s.trim().replace(/^[,\s]+|[,\s]+$/g, ''));
+                }
                 continue;
             }
 
-            mapping.regex.lastIndex = 0;
+
             const matches = s.match(mapping.regex);
             if (matches) {
                 const cleanedMatches = matches
@@ -81,14 +89,13 @@ export class HNHiringParser {
 
                 if (cleanedMatches.length > 0) {
                     if (!result[mapping.field]) {
-                        // TypeScript doesn't dynamically know we're addressing array fields here
                         (result[mapping.field] as string[]) = [];
                     }
 
                     const targetArray = result[mapping.field] as string[];
                     for (const matchStr of cleanedMatches) {
                         // Only add if not entirely duplicated
-                        if (!targetArray.includes(matchStr)) {
+                        if (!targetArray.some(m => normalize(m).includes(normalize(matchStr)))) {
                             targetArray.push(matchStr);
                         }
                     }
@@ -169,7 +176,7 @@ export class HNHiringParser {
                 const normalize = (str: string) => str.toLowerCase().replace(/[^a-z0-9+#]/g, '');
 
                 (result[key] as string[]) = list.filter((currentStr: string, i: number) => {
-                    const normCurrent = normalize(currentStr);
+                    const normCurrent = (currentStr);
                     return !list.some((otherStr: string, j: number) => {
                         return i !== j && normalize(otherStr).includes(normCurrent);
                     });

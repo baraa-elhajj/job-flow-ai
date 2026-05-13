@@ -270,7 +270,7 @@ export const JOB_TITLES = [
 
     // ── Design ──────────────────────────────────────────────────────────
     "UX Designer", "UI Designer", "UX/UI Designer", "UI/UX Designer",
-    "Product Designer", "Interaction Designer",
+    "Product Designer", "Interaction Designer", "Design Engineer",
     "Visual Designer", "Graphic Designer",
     "UX Researcher",
 
@@ -293,7 +293,7 @@ export const JOB_TITLES = [
 
     // ── IT & Operations ─────────────────────────────────────────────────
     "System Administrator", "Database Administrator", "DBA",
-    "IT Administrator", "Network Administrator",
+    "IT Administrator", "Network Administrator", "IT Support",
 
     // ── Cybersecurity ───────────────────────────────────────────────────
     "Cybersecurity Analyst", "Cybersecurity Engineer",
