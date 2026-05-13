@@ -1,7 +1,7 @@
 import * as regexUtils from "./regexUtils.js";
-import { GroqCompanyExtractor } from "./LLMHnHiringParserHelpers.js";
+import { DeepSeekCompanyExtractor } from "./LLMHnHiringParserHelpers.js";
 
-type HNParseResult = {
+export type HNParseResult = {
     companyName?: string;
     jobTitle?: string[];
     jobType?: string[];
@@ -15,10 +15,10 @@ type HNParseResult = {
 }
 
 export class HNHiringParser {
-    llm: GroqCompanyExtractor;
+    llm: DeepSeekCompanyExtractor;
 
     constructor() {
-        this.llm = new GroqCompanyExtractor();
+        this.llm = new DeepSeekCompanyExtractor();
     }
 
     getLinksFromDesc(description: string): string[] {

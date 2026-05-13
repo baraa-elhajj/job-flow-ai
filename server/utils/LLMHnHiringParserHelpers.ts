@@ -1,24 +1,23 @@
 import axios from "axios";
 
 /**
- * Uses Groq (free tier, Llama 3.3 70B) to extract the company name
+ * Uses DeepSeek to extract the company name
  * from the first pipe-separated section of an HN Hiring title.
  *
  * Only the first segment is sent — keeping token usage tiny (~50 tokens/req).
- * Free tier: 30 RPM, 14.4K tokens/min.
  */
-export class GroqCompanyExtractor {
+export class DeepSeekCompanyExtractor {
     private apiKey: string;
     private model: string;
     private apiUrl: string;
 
-    constructor(apiKey?: string, model: string = "llama-3.3-70b-versatile") {
-        this.apiKey = apiKey || process.env.GROQ_API_KEY || "";
+    constructor(apiKey?: string, model: string = "deepseek-chat") {
+        this.apiKey = apiKey || process.env.DEEPSEEK_API_KEY || "";
         this.model = model;
-        this.apiUrl = "https://api.groq.com/openai/v1/chat/completions";
+        this.apiUrl = "https://api.deepseek.com/chat/completions";
 
         if (!this.apiKey) {
-            console.warn("GroqCompanyExtractor: No API key found. Set GROQ_API_KEY in .env");
+            console.warn("DeepSeekCompanyExtractor: No API key found. Set DEEPSEEK_API_KEY in .env");
         }
     }
 
@@ -74,7 +73,7 @@ Emails: ${emails.length > 0 ? emails.join(', ') : 'None'}`,
 
             return text;
         } catch (error: any) {
-            console.error("GroqCompanyExtractor error:", error?.response?.data || error.message);
+            console.error("DeepSeekCompanyExtractor error:", error?.response?.data || error.message);
             return null;
         }
     }
