@@ -53,13 +53,23 @@ export class HNHiringParser {
             { regex: regexUtils.JOB_ROLE_REGEX, field: 'jobTitle' }
         ];
 
+        let matched = false;
+
         for (const mapping of REGEX_MAPPING) {
-            // If we are parsing the description (not the title) and we already found location or jobType in the title, skip them.
-            if (!isTitle && (mapping.field === 'location' || mapping.field === 'jobType')) {
-                const existingList = result[mapping.field];
+            if (!isTitle && (mapping.field === 'location')) {
+                const existingList = [...(result["location"] || []), ...(result["jobType"] || [])];
                 if (existingList && existingList.length > 0) {
                     continue;
                 }
+            }
+
+            if (!isTitle && (mapping.field === 'jobTitle') && !matched) {
+                if (!result[mapping.field]) {
+                    (result[mapping.field] as string[]) = [];
+                }
+
+                (result[mapping.field] as string[]).push(s.trim());
+                continue;
             }
 
             mapping.regex.lastIndex = 0;
@@ -86,6 +96,7 @@ export class HNHiringParser {
 
                 if (mapping.removeMatch) {
                     s = s.replace(mapping.regex, "");
+                    matched = true;
                 }
             }
         }

@@ -146,7 +146,8 @@ export const TECH_SKILLS = [
     "Linux", "Unix", "macOS", "Windows",
     "TCP/IP", "HTTP", "HTTPS", "OAuth", "JWT", "OpenID",
     "Microservices", "Serverless", "Event-Driven", "CQRS", "DDD",
-    "Agile", "Scrum", "Kanban", "Jira", "Confluence"
+    "Agile", "Scrum", "Kanban", "Jira", "Confluence",
+    "AI"
 ];
 
 // Build regex — note C++ and C# are pre-escaped in the array
@@ -232,7 +233,7 @@ export const JOB_TITLES = [
     "iOS Engineer", "iOS Developer",
     "Android Engineer", "Android Developer",
     "Web Developer", "Web Engineer",
-    "Platform Engineer", "Platform Developer",
+    "Platform Engineer", "Platform Developer", "Platform Operations Engineer",
     "Infrastructure Engineer",
     "Systems Engineer", "Systems Developer",
     "Embedded Engineer", "Embedded Developer", "Embedded Software Engineer",
@@ -247,12 +248,12 @@ export const JOB_TITLES = [
     "Solutions Engineer", "Sales Engineer",
     "Support Engineer",
     "Machine Learning Engineer", "ML Engineer",
-    "AI Engineer",
+    "AI Engineer", "AI Operations Lead", "AI Operations Engineer",
     "Data Engineer",
     "Blockchain Engineer", "Smart Contract Engineer",
     "Compiler Engineer",
     "Graphics Engineer", "Game Engineer", "Game Developer",
-    "Founding Engineer",
+    "Founding Engineer", "Product Engineer",
     "Staff Engineer", "Principal Engineer",
 
     // ── Architecture ────────────────────────────────────────────────────
