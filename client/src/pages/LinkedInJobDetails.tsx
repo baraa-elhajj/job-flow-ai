@@ -4,27 +4,23 @@ import {
   ArrowLeft,
   MapPin,
   Clock,
+  Briefcase,
   Loader2,
   ChevronDown,
 } from "lucide-react";
 
-interface ParsedJob {
+interface LinkedInJob {
   _id: string;
-  by: string;
-  datePosted: string;
-  title: string;
-  text: string;
-  links: string[];
-  companyName?: string;
-  jobTitle?: string[];
-  jobType?: string[];
-  employmentType?: string[];
-  location?: string[];
-  skills?: string[];
-  seniority?: string[];
-  salary?: string[];
-  visaSponsorship?: string[];
-  url?: string[];
+  linkedin_url: string;
+  job_title?: string;
+  company?: string;
+  company_linkedin_url?: string;
+  location?: string;
+  posted_date?: string;
+  applicant_count?: string;
+  job_description?: string;
+  benefits?: string;
+  createdAt: string;
 }
 
 function CollapsibleSection({
@@ -65,9 +61,9 @@ function CollapsibleSection({
   );
 }
 
-export default function JobDetail() {
+export default function LinkedInJobDetails() {
   const { id } = useParams();
-  const [job, setJob] = useState<ParsedJob | null>(null);
+  const [job, setJob] = useState<LinkedInJob | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -76,12 +72,12 @@ export default function JobDetail() {
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch(`/api/jobs/parsed/${id}`);
+        const res = await fetch(`/api/jobs/linkedin/${id}`);
         const data = await res.json();
         if (data.success) {
           setJob(data.job);
         } else {
-          setError(data.error || "Job not found");
+          setError(data.error || "LinkedIn job not found");
         }
       } catch {
         setError("Could not connect to the server.");
@@ -107,7 +103,7 @@ export default function JobDetail() {
           Job Not Found
         </h1>
         <p className="text-gruvbox-fg4 max-w-md mb-8 leading-relaxed">
-          {error || "The job you're looking for does not exist."}
+          {error || "The LinkedIn job you're looking for does not exist."}
         </p>
         <Link
           to="/jobs"
@@ -133,48 +129,50 @@ export default function JobDetail() {
 
         {/* Job Header */}
         <div className="bg-gruvbox-bg1 border border-gruvbox-bg3 rounded-lg p-8 mb-8 shadow-sm">
-          <h1 className="text-4xl font-bold text-gruvbox-fg0 mb-2">
-            {job.title}
-          </h1>
-          <p className="text-2xl text-gruvbox-orange_light mb-6">
-            {job.companyName || job.by}
-          </p>
+          <div className="flex justify-between items-start mb-4">
+            <div className="flex-1">
+              <h1 className="text-4xl font-bold text-gruvbox-fg0 mb-2">{job.job_title}</h1>
+              <p className="text-2xl text-gruvbox-orange_light font-medium">{job.company}</p>
+            </div>
+            {job.linkedin_url && (
+              <a
+                href={job.linkedin_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-gruvbox-orange hover:bg-gruvbox-orange_light text-gruvbox-bg0_h px-6 py-3 rounded-lg font-bold transition shadow-md"
+              >
+                Apply on LinkedIn
+              </a>
+            )}
+          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8">
             <div className="space-y-4">
-              {job.location && job.location.length > 0 && (
+              {job.location && (
                 <CollapsibleSection title="Location" icon={<MapPin className="w-4 h-4 text-gruvbox-aqua" />}>
-                  <div className="flex flex-wrap gap-2">
-                    {job.location.map((loc, idx) => (
-                      <span key={idx} className="px-3 py-1 bg-gruvbox-aqua/20 text-gruvbox-aqua_light rounded-full text-sm font-medium border border-gruvbox-aqua/30">
-                        {loc}
-                      </span>
-                    ))}
-                  </div>
+                  <span className="px-3 py-1 bg-gruvbox-aqua/20 text-gruvbox-aqua_light rounded-full text-sm font-medium border border-gruvbox-aqua/30">
+                    {job.location}
+                  </span>
                 </CollapsibleSection>
               )}
-              {job.employmentType && job.employmentType.length > 0 && (
-                <CollapsibleSection title="Employment Type" icon={<Clock className="w-4 h-4 text-gruvbox-green" />}>
-                  <div className="flex flex-wrap gap-2">
-                    {job.employmentType.map((emp, idx) => (
-                      <span key={idx} className="px-3 py-1 bg-gruvbox-green/20 text-gruvbox-green_light rounded-full text-sm font-medium border border-gruvbox-green/30">
-                        {emp}
-                      </span>
-                    ))}
-                  </div>
+              {job.applicant_count && (
+                <CollapsibleSection title="Applicants" icon={<Clock className="w-4 h-4 text-gruvbox-green" />}>
+                  <span className="text-gruvbox-fg2">{job.applicant_count}</span>
                 </CollapsibleSection>
               )}
             </div>
+
             <div className="space-y-4">
-              {job.skills && job.skills.length > 0 && (
-                <CollapsibleSection title="Required Skills">
-                  <div className="flex flex-wrap gap-2">
-                    {job.skills.map((skill, idx) => (
-                      <span key={idx} className="px-3 py-1 bg-gruvbox-bg2 text-gruvbox-fg1 rounded-lg text-sm font-medium border border-gruvbox-bg4/50">
-                        {skill}
-                      </span>
-                    ))}
-                  </div>
+              {job.benefits && (
+                <CollapsibleSection title="Benefits" icon={<Briefcase className="w-4 h-4 text-gruvbox-yellow" />}>
+                  <p className="text-sm text-gruvbox-fg2 leading-relaxed bg-gruvbox-bg2/30 p-4 rounded-lg border border-gruvbox-bg3">
+                    {job.benefits}
+                  </p>
+                </CollapsibleSection>
+              )}
+              {job.posted_date && (
+                <CollapsibleSection title="Posted Date" icon={<Clock className="w-4 h-4 text-gruvbox-orange" />}>
+                   <span className="text-gruvbox-fg2">{job.posted_date}</span>
                 </CollapsibleSection>
               )}
             </div>
@@ -183,19 +181,18 @@ export default function JobDetail() {
 
         {/* Job Description */}
         <div className="bg-gruvbox-bg1 border border-gruvbox-bg3 rounded-lg p-8 mb-8 shadow-sm">
-          <h2 className="text-2xl font-bold text-gruvbox-fg0 mb-4">
+          <h2 className="text-2xl font-bold text-gruvbox-fg0 mb-6 pb-2 border-b border-gruvbox-bg3">
             Job Description
           </h2>
           <div
-            className="text-gruvbox-fg2 leading-relaxed [&_p]:mb-4 last:[&_p]:mb-0 [&_a]:text-gruvbox-orange_light [&_a:hover]:text-gruvbox-orange_light [&_a]:underline [&_a]:font-medium"
-            dangerouslySetInnerHTML={{ __html: job.text }}
+            className="text-gruvbox-fg2 leading-relaxed whitespace-pre-wrap [&_p]:mb-4 last:[&_p]:mb-0 [&_a]:text-gruvbox-orange_light [&_a:hover]:text-gruvbox-orange_light [&_a]:underline [&_a]:font-medium"
+            dangerouslySetInnerHTML={{ __html: job.job_description || "" }}
           />
         </div>
 
         {/* Meta info */}
-        <div className="text-center text-gruvbox-gray text-sm mt-8">
-          Posted by <span className="text-gruvbox-fg4">{job.by}</span> on{" "}
-          <span className="text-gruvbox-fg4">{job.datePosted}</span>
+        <div className="text-center text-gruvbox-gray text-sm mt-8 pb-12">
+          Source: LinkedIn • {job.posted_date}
         </div>
       </section>
     </div>

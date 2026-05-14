@@ -2,22 +2,18 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { MapPin, Clock, Briefcase, Loader2, ChevronDown } from "lucide-react";
 
-interface ParsedJob {
+interface LinkedInJob {
   _id: string;
-  by: string;
-  datePosted: string;
-  title: string;
-  text: string;
-  companyName?: string;
-  jobTitle?: string[];
-  jobType?: string[];
-  employmentType?: string[];
-  location?: string[];
-  skills?: string[];
-  seniority?: string[];
-  salary?: string[];
-  visaSponsorship?: string[];
-  url?: string[];
+  linkedin_url: string;
+  job_title?: string;
+  company?: string;
+  company_linkedin_url?: string;
+  location?: string;
+  posted_date?: string;
+  applicant_count?: string;
+  job_description?: string;
+  benefits?: string;
+  createdAt: string;
 }
 
 function CollapsibleSection({
@@ -58,17 +54,21 @@ function CollapsibleSection({
   );
 }
 
-
-function JobCard({ job }: { job: ParsedJob }) {
+function JobCard({ job }: { job: LinkedInJob }) {
   const [showDetails, setShowDetails] = useState(false);
 
   return (
     <div className="bg-gruvbox-bg1 border border-gruvbox-bg3 rounded-lg p-6 hover:border-gruvbox-orange transition shadow-sm hover:shadow-md">
       <div className="flex justify-between items-start mb-4">
         <div className="flex-1">
-          <h3 className={`text-2xl font-bold text-gruvbox-fg0 ${showDetails ? "" : "line-clamp-2"}`}>{job.title}</h3>
-          <p className="text-gruvbox-orange_light text-lg font-medium">{job.companyName || job.by}</p>
+          <h3 className={`text-2xl font-bold text-gruvbox-fg0 ${showDetails ? "" : "line-clamp-2"}`}>{job.job_title}</h3>
+          <p className="text-gruvbox-orange_light text-lg font-medium">{job.company}</p>
         </div>
+        {job.applicant_count && (
+          <span className="text-xs font-semibold bg-gruvbox-bg2 text-gruvbox-fg4 px-2 py-1 rounded border border-gruvbox-bg3">
+            {job.applicant_count} applicants
+          </span>
+        )}
       </div>
 
       <div
@@ -77,7 +77,7 @@ function JobCard({ job }: { job: ParsedJob }) {
             ? "block [&_p]:mb-4 last:[&_p]:mb-0" 
             : "line-clamp-3 [&_p]:inline"
         }`}
-        dangerouslySetInnerHTML={{ __html: job.text || "" }}
+        dangerouslySetInnerHTML={{ __html: job.job_description || "" }}
       />
 
       <div
@@ -86,34 +86,19 @@ function JobCard({ job }: { job: ParsedJob }) {
         }`}
       >
         <div className="overflow-hidden mt-4">
-          {job.location && job.location.length > 0 && (
+          {job.location && (
             <CollapsibleSection title="Location" icon={<MapPin className="w-4 h-4 text-gruvbox-aqua" />}>
-              <div className="flex flex-wrap gap-2">
-                {job.location.slice(0, 3).map((loc, idx) => (
-                  <span
-                    key={`loc-${idx}`}
-                    className="px-3 py-1 text-sm bg-gruvbox-aqua/20 text-gruvbox-aqua_light rounded-full border border-gruvbox-aqua/30 flex items-center gap-1.5"
-                  >
-                    <MapPin className="w-3.5 h-3.5" />
-                    {loc}
-                  </span>
-                ))}
-              </div>
+              <span className="px-3 py-1 text-sm bg-gruvbox-aqua/20 text-gruvbox-aqua_light rounded-full border border-gruvbox-aqua/30 flex items-center gap-1.5 w-fit">
+                <MapPin className="w-3.5 h-3.5" />
+                {job.location}
+              </span>
             </CollapsibleSection>
           )}
-
-          {job.skills && job.skills.length > 0 && (
-            <CollapsibleSection title="Required Skills">
-              <div className="flex flex-wrap gap-2">
-                {job.skills.slice(0, 8).map((skill, idx) => (
-                  <span
-                    key={idx}
-                    className="px-3 py-1 text-sm bg-gruvbox-bg2 text-gruvbox-fg2 rounded-full"
-                  >
-                    {skill}
-                  </span>
-                ))}
-              </div>
+          {job.benefits && (
+            <CollapsibleSection title="Benefits" icon={<Briefcase className="w-4 h-4 text-gruvbox-yellow" />}>
+              <p className="text-sm text-gruvbox-fg2 bg-gruvbox-bg2/50 p-3 rounded border border-gruvbox-bg3">
+                {job.benefits}
+              </p>
             </CollapsibleSection>
           )}
         </div>
@@ -132,20 +117,32 @@ function JobCard({ job }: { job: ParsedJob }) {
       </button>
 
       <div className="flex items-center justify-between mt-2 pt-4 border-t border-gruvbox-bg3/50">
-        <span className="text-sm text-gruvbox-gray">Posted: {job.datePosted}</span>
-        <Link
-          to={`/jobs/${job._id}`}
-          className="inline-block px-6 py-2 bg-gruvbox-orange hover:bg-gruvbox-orange_light text-gruvbox-fg0 rounded-lg transition font-semibold"
-        >
-          View Details
-        </Link>
+        <span className="text-sm text-gruvbox-gray">Posted on LinkedIn: {job.posted_date}</span>
+        <div className="flex gap-3">
+          {job.linkedin_url && (
+            <a
+              href={job.linkedin_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block px-4 py-2 bg-gruvbox-bg2 hover:bg-gruvbox-bg3 text-gruvbox-fg0 rounded-lg transition font-semibold"
+            >
+              Apply
+            </a>
+          )}
+          <Link
+            to={`/jobs/linkedin/${job._id}`}
+            className="inline-block px-6 py-2 bg-gruvbox-orange hover:bg-gruvbox-orange_light text-gruvbox-fg0 rounded-lg transition font-semibold"
+          >
+            View Details
+          </Link>
+        </div>
       </div>
     </div>
   );
 }
 
-export default function JobsList({ hideHeader = false }: { hideHeader?: boolean }) {
-  const [jobs, setJobs] = useState<ParsedJob[]>([]);
+export default function LinkedInJobsList({ hideHeader = false }: { hideHeader?: boolean }) {
+  const [jobs, setJobs] = useState<LinkedInJob[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
@@ -157,7 +154,7 @@ export default function JobsList({ hideHeader = false }: { hideHeader?: boolean 
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch(`/api/jobs/parsed?page=${page}&limit=20`);
+        const res = await fetch(`/api/jobs/linkedin?page=${page}&limit=20`);
         const data = await res.json();
         if (data.success) {
           setJobs(data.jobs);
@@ -196,21 +193,21 @@ export default function JobsList({ hideHeader = false }: { hideHeader?: boolean 
         {!hideHeader && (
           <div className="flex flex-col md:flex-row md:items-start justify-between gap-6 mb-12">
             <div>
-              <h2 className="text-4xl font-bold text-gruvbox-fg0 mb-3">HN Hiring</h2>
+              <h2 className="text-4xl font-bold text-gruvbox-fg0 mb-3">LinkedIn Jobs</h2>
               <p className="text-gruvbox-fg4 text-base max-w-2xl leading-relaxed">
-                JobFlow AI automatically aggregates and parses unstructured job postings from Hacker News. We use advanced extraction to turn noisy comment threads into clean, scannable job cards.
+                JobFlow AI aggregates premium job postings directly from LinkedIn, providing a clean and efficient way to browse the latest tech opportunities.
               </p>
             </div>
             
             <div className="flex bg-gruvbox-bg1 border border-gruvbox-bg3 rounded-lg p-1">
               <button 
-                className="px-6 py-2 bg-gruvbox-orange text-gruvbox-fg0 rounded-md font-semibold transition shadow-sm"
+                onClick={() => navigate("/jobs")}
+                className="px-6 py-2 text-gruvbox-fg4 hover:text-gruvbox-fg2 rounded-md font-semibold transition"
               >
                 HN Hiring
               </button>
               <button 
-                onClick={() => navigate("/jobs/linkedin")}
-                className="px-6 py-2 text-gruvbox-fg4 hover:text-gruvbox-fg2 rounded-md font-semibold transition"
+                className="px-6 py-2 bg-gruvbox-orange text-gruvbox-fg0 rounded-md font-semibold transition shadow-sm"
               >
                 LinkedIn
               </button>
@@ -225,7 +222,7 @@ export default function JobsList({ hideHeader = false }: { hideHeader?: boolean 
             ))
           ) : (
             <div className="bg-gruvbox-bg1 border border-gruvbox-bg3 rounded-lg p-12 text-center">
-              <p className="text-gruvbox-fg4 text-lg">No jobs found.</p>
+              <p className="text-gruvbox-fg4 text-lg">No LinkedIn jobs found.</p>
             </div>
           )}
         </div>
