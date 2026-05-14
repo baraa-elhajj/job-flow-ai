@@ -1,6 +1,5 @@
 import { useState } from "react";
 import JobsList from "./JobsList";
-import LinkedInJobsList from "./LinkedInJobsList";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<"hn" | "linkedin">("hn");
@@ -47,11 +46,11 @@ export default function Home() {
       <div className="transition-all duration-300">
         {activeTab === "hn" ? (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <JobsList hideHeader={true} />
+            <JobsList hideHeader={true} source="hn" />
           </div>
         ) : (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <LinkedInJobsList hideHeader={true} />
+            <JobsList hideHeader={true} source="linkedin" />
           </div>
         )}
       </div>
