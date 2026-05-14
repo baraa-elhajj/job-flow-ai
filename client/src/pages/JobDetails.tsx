@@ -1,12 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import {
-  ArrowLeft,
-  MapPin,
-  Clock,
-  Loader2,
-  ChevronDown,
-} from "lucide-react";
+import { ArrowLeft, MapPin, Clock, Loader2, ChevronDown } from "lucide-react";
 
 interface ParsedJob {
   _id: string;
@@ -51,13 +45,17 @@ function CollapsibleSection({
           {title}
         </p>
         <ChevronDown
-          className={`w-4 h-4 text-gruvbox-gray transition-transform duration-300 ${open ? "rotate-180" : "rotate-0"
-            }`}
+          className={`w-4 h-4 text-gruvbox-gray transition-transform duration-300 ${
+            open ? "rotate-180" : "rotate-0"
+          }`}
         />
       </button>
       <div
-        className={`grid transition-all duration-300 ease-in-out ${open ? "grid-rows-[1fr] opacity-100 mt-3" : "grid-rows-[0fr] opacity-0 mt-0"
-          }`}
+        className={`grid transition-all duration-300 ease-in-out ${
+          open
+            ? "grid-rows-[1fr] opacity-100 mt-3"
+            : "grid-rows-[0fr] opacity-0 mt-0"
+        }`}
       >
         <div className="overflow-hidden">{children}</div>
       </div>
@@ -143,10 +141,16 @@ export default function JobDetail() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="space-y-4">
               {job.location && job.location.length > 0 && (
-                <CollapsibleSection title="Location" icon={<MapPin className="w-4 h-4 text-gruvbox-aqua" />}>
+                <CollapsibleSection
+                  title="Location"
+                  icon={<MapPin className="w-4 h-4 text-gruvbox-aqua" />}
+                >
                   <div className="flex flex-wrap gap-2">
                     {job.location.map((loc, idx) => (
-                      <span key={idx} className="px-3 py-1 bg-gruvbox-aqua/20 text-gruvbox-aqua_light rounded-full text-sm font-medium border border-gruvbox-aqua/30">
+                      <span
+                        key={idx}
+                        className="px-3 py-1 bg-gruvbox-aqua/20 text-gruvbox-aqua_light rounded-full text-sm font-medium border border-gruvbox-aqua/30"
+                      >
                         {loc}
                       </span>
                     ))}
@@ -154,10 +158,16 @@ export default function JobDetail() {
                 </CollapsibleSection>
               )}
               {job.employmentType && job.employmentType.length > 0 && (
-                <CollapsibleSection title="Employment Type" icon={<Clock className="w-4 h-4 text-gruvbox-green" />}>
+                <CollapsibleSection
+                  title="Employment Type"
+                  icon={<Clock className="w-4 h-4 text-gruvbox-green" />}
+                >
                   <div className="flex flex-wrap gap-2">
                     {job.employmentType.map((emp, idx) => (
-                      <span key={idx} className="px-3 py-1 bg-gruvbox-green/20 text-gruvbox-green_light rounded-full text-sm font-medium border border-gruvbox-green/30">
+                      <span
+                        key={idx}
+                        className="px-3 py-1 bg-gruvbox-green/20 text-gruvbox-green_light rounded-full text-sm font-medium border border-gruvbox-green/30"
+                      >
                         {emp}
                       </span>
                     ))}
@@ -170,7 +180,10 @@ export default function JobDetail() {
                 <CollapsibleSection title="Required Skills">
                   <div className="flex flex-wrap gap-2">
                     {job.skills.map((skill, idx) => (
-                      <span key={idx} className="px-3 py-1 bg-gruvbox-bg2 text-gruvbox-fg1 rounded-lg text-sm font-medium border border-gruvbox-bg4/50">
+                      <span
+                        key={idx}
+                        className="px-3 py-1 bg-gruvbox-bg2 text-gruvbox-fg1 rounded-lg text-sm font-medium border border-gruvbox-bg4/50"
+                      >
                         {skill}
                       </span>
                     ))}
