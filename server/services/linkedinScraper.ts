@@ -147,6 +147,7 @@ async function extractJobsFromPage(
 
     for (let i = 0; i < basicJobs.length; i++) {
       const job = basicJobs[i];
+      if (!job || !job.url) continue;
       console.log(`Fetching description for job #${i + 1}...`);
 
       try {
