@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, MapPin, Clock, Loader2, ChevronDown } from "lucide-react";
 
 interface ParsedJob {
@@ -51,8 +51,8 @@ function CollapsibleSection({
       </button>
       <div
         className={`grid transition-all duration-300 ease-in-out ${open
-            ? "grid-rows-[1fr] opacity-100 mt-3"
-            : "grid-rows-[0fr] opacity-0 mt-0"
+          ? "grid-rows-[1fr] opacity-100 mt-3"
+          : "grid-rows-[0fr] opacity-0 mt-0"
           }`}
       >
         <div className="overflow-hidden">{children}</div>
