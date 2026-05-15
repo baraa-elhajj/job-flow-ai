@@ -2,7 +2,11 @@ import { useState } from "react";
 import { MapPin, ChevronDown, Globe } from "lucide-react";
 import type { LinkedInJobApiResponse } from "../../types/linkedinJob";
 
-export default function LinkedInJobListItem({ job }: { job: LinkedInJobApiResponse }) {
+export default function LinkedInJobListItem({
+  job,
+}: {
+  job: LinkedInJobApiResponse;
+}) {
   const [showDetails, setShowDetails] = useState(false);
   const [locationOpen, setLocationOpen] = useState(true);
 
@@ -34,18 +38,20 @@ export default function LinkedInJobListItem({ job }: { job: LinkedInJobApiRespon
       </div>
 
       <div
-        className={`text-gruvbox-fg2 mb-4 [&_a]:text-gruvbox-orange_light [&_a:hover]:text-gruvbox-orange_light [&_a]:underline [&_a]:font-medium whitespace-pre-wrap ${showDetails
+        className={`text-gruvbox-fg2 mb-4 [&_a]:text-gruvbox-orange_light [&_a:hover]:text-gruvbox-orange_light [&_a]:underline [&_a]:font-medium whitespace-pre-wrap ${
+          showDetails
             ? "block [&_p]:mb-4 last:[&_p]:mb-0"
             : "line-clamp-3 [&_p]:inline"
-          }`}
+        }`}
         dangerouslySetInnerHTML={{ __html: displayDescription }}
       />
 
       <div
-        className={`grid transition-all duration-300 ease-in-out ${showDetails
+        className={`grid transition-all duration-300 ease-in-out ${
+          showDetails
             ? "grid-rows-[1fr] opacity-100 mb-4"
             : "grid-rows-[0fr] opacity-0"
-          }`}
+        }`}
       >
         <div className="overflow-hidden mt-4">
           {locations.length > 0 && (
@@ -60,15 +66,17 @@ export default function LinkedInJobListItem({ job }: { job: LinkedInJobApiRespon
                   Location
                 </p>
                 <ChevronDown
-                  className={`w-3.5 h-3.5 text-gruvbox-gray transition-transform duration-300 ${locationOpen ? "rotate-180" : "rotate-0"
-                    }`}
+                  className={`w-3.5 h-3.5 text-gruvbox-gray transition-transform duration-300 ${
+                    locationOpen ? "rotate-180" : "rotate-0"
+                  }`}
                 />
               </button>
               <div
-                className={`grid transition-all duration-300 ease-in-out ${locationOpen
+                className={`grid transition-all duration-300 ease-in-out ${
+                  locationOpen
                     ? "grid-rows-[1fr] opacity-100 mt-3"
                     : "grid-rows-[0fr] opacity-0 mt-0"
-                  }`}
+                }`}
               >
                 <div className="overflow-hidden">
                   <div className="flex flex-wrap gap-2">
@@ -96,17 +104,16 @@ export default function LinkedInJobListItem({ job }: { job: LinkedInJobApiRespon
       >
         {showDetails ? "Hide Less" : "Show More"}
         <ChevronDown
-          className={`w-4 h-4 transition-transform duration-300 ${showDetails ? "rotate-180" : ""
-            }`}
+          className={`w-4 h-4 transition-transform duration-300 ${
+            showDetails ? "rotate-180" : ""
+          }`}
         />
       </button>
 
       <div className="flex items-center justify-between mt-2 pt-4 border-t border-gruvbox-bg3/50">
-        <span className="text-sm text-gruvbox-gray">
-          Posted: {datePosted}
-        </span>
+        <span className="text-sm text-gruvbox-gray">Posted: {datePosted}</span>
         <a
-          href={job.url}
+          href={job.linkedin_url}
           target="_blank"
           rel="noopener noreferrer"
           className="inline-block px-6 py-2 bg-gruvbox-orange hover:bg-gruvbox-orange_light text-white rounded-lg transition font-semibold"
