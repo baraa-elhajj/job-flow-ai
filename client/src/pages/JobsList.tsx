@@ -12,6 +12,11 @@ export default function JobsList({ source }: { source: string }) {
   const [totalPages, setTotalPages] = useState(1);
 
   useEffect(() => {
+    setPage(1);
+    setError(null);
+  }, [source]);
+
+  useEffect(() => {
     async function fetchJobs() {
       setLoading(true);
       setError(null);
@@ -20,7 +25,7 @@ export default function JobsList({ source }: { source: string }) {
         const res = await fetch(`${endpoint}&page=${page}&limit=20`);
         const data = await res.json();
         if (data.success) {
-    
+
           setJobs(data.jobs);
           setTotalPages(data.totalPages);
         } else {
@@ -53,7 +58,7 @@ export default function JobsList({ source }: { source: string }) {
 
   return (
     <div className="min-h-screen bg-gruvbox-bg">
-      <section className="max-w-6xl mx-auto px-6 py-12">    
+      <section className="max-w-6xl mx-auto px-6 py-12">
         <div className="space-y-6">
           {jobs.length > 0 ? (
             jobs.map((job) => (
