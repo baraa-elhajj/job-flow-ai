@@ -7,7 +7,7 @@ const NotFound = () => {
       <div className="mb-6 relative">
         <Zap
           size={80}
-          className="text-gruvbox-orange fill-blue-400/20 animate-pulse"
+          className="text-gruvbox-orange fill-gruvbox-orange/20 animate-pulse"
         />
         <span className="absolute -bottom-2 -right-2 bg-gruvbox-bg1 text-gruvbox-fg0 text-xs font-bold px-2 py-1 rounded border border-gruvbox-bg3">
           404

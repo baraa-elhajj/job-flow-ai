@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, MapPin, Clock, Loader2, ChevronDown } from "lucide-react";
 
 interface ParsedJob {
@@ -45,17 +45,15 @@ function CollapsibleSection({
           {title}
         </p>
         <ChevronDown
-          className={`w-4 h-4 text-gruvbox-gray transition-transform duration-300 ${
-            open ? "rotate-180" : "rotate-0"
-          }`}
+          className={`w-4 h-4 text-gruvbox-gray transition-transform duration-300 ${open ? "rotate-180" : "rotate-0"
+            }`}
         />
       </button>
       <div
-        className={`grid transition-all duration-300 ease-in-out ${
-          open
+        className={`grid transition-all duration-300 ease-in-out ${open
             ? "grid-rows-[1fr] opacity-100 mt-3"
             : "grid-rows-[0fr] opacity-0 mt-0"
-        }`}
+          }`}
       >
         <div className="overflow-hidden">{children}</div>
       </div>
@@ -65,6 +63,7 @@ function CollapsibleSection({
 
 export default function JobDetail() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [job, setJob] = useState<ParsedJob | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -107,13 +106,13 @@ export default function JobDetail() {
         <p className="text-gruvbox-fg4 max-w-md mb-8 leading-relaxed">
           {error || "The job you're looking for does not exist."}
         </p>
-        <Link
-          to="/jobs"
+        <button
+          onClick={() => navigate(-1)}
           className="inline-flex items-center gap-2 bg-gruvbox-fg0 text-gruvbox-bg0_h px-6 py-3 rounded-lg font-semibold hover:bg-gruvbox-fg0/80 transition-colors duration-300"
         >
           <ArrowLeft size={18} />
           Back to Jobs List
-        </Link>
+        </button>
       </div>
     );
   }
@@ -121,13 +120,13 @@ export default function JobDetail() {
   return (
     <div className="min-h-screen bg-gruvbox-bg">
       <section className="max-w-7xl mx-auto px-6 py-12">
-        <Link
-          to="/jobs"
+        <button
+          onClick={() => navigate(-1)}
           className="inline-flex items-center gap-2 text-gruvbox-fg0 hover:text-gruvbox-fg0/90 mb-8 transition"
         >
           <ArrowLeft className="w-5 h-5" />
           Back to Jobs List
-        </Link>
+        </button>
 
         {/* Job Header */}
         <div className="bg-gruvbox-bg1 border border-gruvbox-bg3 rounded-lg p-8 mb-8 shadow-sm">

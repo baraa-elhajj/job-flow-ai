@@ -64,6 +64,8 @@ async def main():
             jobs.append(job)
 
         documents = [job.to_dict() for job in jobs]
+        for document in documents:
+            document["source"] = "linkedin"
 
         # connect to mongodb
         mongo_uri = os.getenv("MONGODB_URI")
@@ -73,7 +75,7 @@ async def main():
 
         client = MongoClient(mongo_uri)
         db = client["test"]
-        collection = db["linkedin_jobs"]
+        collection = db["Jobs"]
         if len(documents) > 0:
             collection.insert_many(documents)
 
