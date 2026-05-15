@@ -29,13 +29,13 @@ jobs:
       - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -e ./linkedin_scraper
+          pip install -r linkedin_scraper/requirements.txt
 
       - name: Install Playwright Chromium
         run: playwright install chromium --with-deps
 
       - name: Run Lebanon job scraper
-        working-directory: linkedin_scraper
         env:
           MONGODB_URI: ${{ secrets.MONGODB_URI }}
-        run: python samples/scrape_from_past_12_lb.py
+          PYTHONPATH: ${{ github.workspace }}/linkedin_scraper
+        run: python linkedin_scraper/samples/scrape_from_past_12_lb.py
