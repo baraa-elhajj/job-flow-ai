@@ -5,7 +5,7 @@ import { scrapeAndStoreHNHiringJobs } from "./hnhiringScraper.js";
 export function startScraperScheduler() {
   console.log("Starting job scraper scheduler...");
 
-  // LinkedIn scrape every 12 hours
+  // LinkedIn scrape at 12:05 & 00:05 daily
   cron.schedule("5 0,12 * * *", async () => {
     console.log("Starting LinkedIn scrape...");
 
@@ -20,7 +20,7 @@ export function startScraperScheduler() {
     }
   });
 
-  // HN Hiring scrape every 2 hours
+  // HN Hiring scrape every 2 hours on the first 5 days of the month, then every 12 hours on the rest of the month
   cron.schedule("0 */2 * * *", async () => {
     console.log("Starting HN Hiring scrape...");
 
