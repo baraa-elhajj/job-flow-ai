@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import type { JobsListItem } from "../types/job";
 import JobsListItemRow from "../components/jobs/JobsListItemRow";
@@ -7,13 +8,10 @@ export default function JobsList({ source }: { source: string }) {
   const [jobs, setJobs] = useState<JobsListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
 
-  useEffect(() => {
-    setPage(1);
-    setError(null);
-  }, [source]);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const page = parseInt(searchParams.get("page") || "1", 10);
+  const [totalPages, setTotalPages] = useState<number>(1);
 
   useEffect(() => {
     async function fetchJobs() {
@@ -38,6 +36,20 @@ export default function JobsList({ source }: { source: string }) {
     fetchJobs();
   }, [page, source]);
 
+  useEffect(() => {
+    window.scrollTo({
+      top: 0,
+      behavior: "auto",
+    });
+  }, [page]);
+
+  const handlePageChange = (newPage: number) => {
+    setSearchParams((prev) => {
+      prev.set("page", String(newPage));
+      return prev;
+    });
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gruvbox-bg flex items-center justify-center">
@@ -56,7 +68,7 @@ export default function JobsList({ source }: { source: string }) {
 
   return (
     <div className="min-h-screen bg-gruvbox-bg">
-      <section className="max-w-6xl mx-auto px-6 py-12">
+      <section className="max-w-6xl mx-auto px-6 pb-12">
         <div className="space-y-6">
           {jobs.length > 0 ? (
             jobs.map((job) => <JobsListItemRow key={job._id} job={job} />)
@@ -71,7 +83,7 @@ export default function JobsList({ source }: { source: string }) {
           <div className="flex justify-center gap-4 mt-12">
             <button
               type="button"
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              onClick={() => handlePageChange(Math.max(1, page - 1))}
               disabled={page === 1}
               className="px-6 py-2 bg-gruvbox-bg2 text-gruvbox-fg0 rounded-lg disabled:opacity-40 hover:bg-gruvbox-bg3 transition"
             >
@@ -82,7 +94,7 @@ export default function JobsList({ source }: { source: string }) {
             </span>
             <button
               type="button"
-              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              onClick={() => handlePageChange(Math.min(totalPages, page + 1))}
               disabled={page === totalPages}
               className="px-6 py-2 bg-gruvbox-bg2 text-gruvbox-fg0 rounded-lg disabled:opacity-40 hover:bg-gruvbox-bg3 transition"
             >
