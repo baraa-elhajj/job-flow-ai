@@ -14,3 +14,4 @@ py2neo>=2021.2.3
 # CLI
 click>=8.0.0
 pyyaml>=6.0
+pymongo
