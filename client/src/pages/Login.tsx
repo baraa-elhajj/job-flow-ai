@@ -42,7 +42,7 @@ export default function Login() {
 
             <button
               type="submit"
-              className="w-full bg-gruvbox-orange hover:bg-gruvbox-orange_light text-gruvbox-fg0 font-semibold py-2 px-4 rounded-lg transition duration-200 ease-in-out"
+              className="w-full bg-gruvbox-orange hover:bg-gruvbox-orange_light text-white font-semibold py-2 px-4 rounded-lg transition duration-200 ease-in-out"
             >
               Sign In
             </button>
