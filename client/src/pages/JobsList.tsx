@@ -38,6 +38,13 @@ export default function JobsList({ source }: { source: string }) {
     fetchJobs();
   }, [page, source]);
 
+  useEffect(() => {
+    window.scrollTo({
+      top: 0,
+      behavior: "auto",
+    });
+  }, [page]);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gruvbox-bg flex items-center justify-center">
@@ -56,7 +63,7 @@ export default function JobsList({ source }: { source: string }) {
 
   return (
     <div className="min-h-screen bg-gruvbox-bg">
-      <section className="max-w-6xl mx-auto px-6 py-12">
+      <section className="max-w-6xl mx-auto px-6 pb-12">
         <div className="space-y-6">
           {jobs.length > 0 ? (
             jobs.map((job) => <JobsListItemRow key={job._id} job={job} />)
