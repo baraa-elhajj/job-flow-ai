@@ -15,9 +15,13 @@ if version_match:
 else:
     raise RuntimeError("Unable to find version string in linkedin_scraper/__init__.py")
 
-# Get the long description from the README file
-with open(path.join(here, 'README.md'), encoding='utf-8') as f:
-    long_description = f.read()
+description = 'Async LinkedIn scraper for profiles, companies, and jobs'
+readme_path = path.join(here, 'README.md')
+if path.exists(readme_path):
+    with open(readme_path, encoding='utf-8') as f:
+        long_description = f.read()
+else:
+    long_description = description
 
 # Basic dependencies only (no database/storage dependencies)
 basic_requirements = [
@@ -27,13 +31,14 @@ basic_requirements = [
     'pydantic>=2.0.0',
     'python-dotenv>=1.0.0',
     'aiofiles>=23.0.0',
+    'pymongo>=4.0.0',
 ]
 
 setup(
     name='linkedin_scraper',
     packages=find_packages(exclude=['tests', 'tests.*', 'samples', 'samples.*']),
     version=version,
-    description='Async LinkedIn scraper for profiles, companies, and jobs',
+    description=description,
     long_description=long_description,
     long_description_content_type='text/markdown',
     author='Joey Sham',
