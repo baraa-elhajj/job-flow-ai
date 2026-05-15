@@ -7,7 +7,7 @@ export interface LinkedInJobApiResponse {
   company?: string;
   location?: string;
   job_description?: string;
-  url: string;
+  linkedin_url: string;
   posted_date: string;
   source?: "linkedin";
 }

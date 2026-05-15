@@ -3,7 +3,6 @@ import { Loader2 } from "lucide-react";
 import type { JobsListItem } from "../types/job";
 import JobsListItemRow from "../components/jobs/JobsListItemRow";
 
-
 export default function JobsList({ source }: { source: string }) {
   const [jobs, setJobs] = useState<JobsListItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -25,7 +24,6 @@ export default function JobsList({ source }: { source: string }) {
         const res = await fetch(`${endpoint}&page=${page}&limit=20`);
         const data = await res.json();
         if (data.success) {
-
           setJobs(data.jobs);
           setTotalPages(data.totalPages);
         } else {
@@ -61,9 +59,7 @@ export default function JobsList({ source }: { source: string }) {
       <section className="max-w-6xl mx-auto px-6 py-12">
         <div className="space-y-6">
           {jobs.length > 0 ? (
-            jobs.map((job) => (
-              <JobsListItemRow key={job._id} job={job} />
-            ))
+            jobs.map((job) => <JobsListItemRow key={job._id} job={job} />)
           ) : (
             <div className="bg-gruvbox-bg1 border border-gruvbox-bg3 rounded-lg p-12 text-center">
               <p className="text-gruvbox-fg4 text-lg">No jobs found.</p>
