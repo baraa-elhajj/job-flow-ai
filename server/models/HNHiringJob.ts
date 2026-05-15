@@ -8,6 +8,8 @@ export interface HNHiringJobData {
     text: string;
     links: string[];
     monthYear: string;
+    /** Always `hnhiring` for jobs scraped from hnhiring.com */
+    source: 'hnhiring';
     companyName?: string;
     jobTitle?: string[];
     jobType?: string[];
@@ -30,6 +32,7 @@ const HNHiringJobSchema: Schema = new Schema({
     text: { type: String },
     links: [{ type: String }],
     monthYear: { type: String, required: true },
+    source: { type: String, default: 'hnhiring' },
     companyName: { type: String },
     jobTitle: [{ type: String }],
     jobType: [{ type: String }],

@@ -1,0 +1,119 @@
+import { useState } from "react";
+import { MapPin, ChevronDown, Globe } from "lucide-react";
+import type { LinkedInJobApiResponse } from "../../types/linkedinJob";
+
+export default function LinkedInJobListItem({ job }: { job: LinkedInJobApiResponse }) {
+  const [showDetails, setShowDetails] = useState(false);
+  const [locationOpen, setLocationOpen] = useState(true);
+
+  const company = job.company ?? "Unknown Company";
+  const descriptionText = job.job_description ?? "No description provided";
+  const displayDescription = `<p>${descriptionText.replace(/\n/g, "</p><p>")}</p>`;
+  const locations = job.location ? [job.location] : [];
+  const datePosted = job.posted_date;
+
+  return (
+    <div className="bg-gruvbox-bg1 border border-gruvbox-bg3 rounded-lg p-6 hover:border-gruvbox-orange transition shadow-sm hover:shadow-md">
+      <div className="flex justify-between items-start mb-4">
+        <div className="flex-1">
+          <div className="flex items-center mb-3">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 border border-blue-200 dark:border-blue-800 shadow-sm">
+              <Globe className="w-3 h-3" />
+              LinkedIn
+            </span>
+          </div>
+          <h3
+            className={`text-2xl font-bold text-gruvbox-fg0 mb-1 ${showDetails ? "" : "line-clamp-2"}`}
+          >
+            {job.job_title}
+          </h3>
+          <p className="text-gruvbox-orange_light text-lg font-medium">
+            {company}
+          </p>
+        </div>
+      </div>
+
+      <div
+        className={`text-gruvbox-fg2 mb-4 [&_a]:text-gruvbox-orange_light [&_a:hover]:text-gruvbox-orange_light [&_a]:underline [&_a]:font-medium whitespace-pre-wrap ${showDetails
+            ? "block [&_p]:mb-4 last:[&_p]:mb-0"
+            : "line-clamp-3 [&_p]:inline"
+          }`}
+        dangerouslySetInnerHTML={{ __html: displayDescription }}
+      />
+
+      <div
+        className={`grid transition-all duration-300 ease-in-out ${showDetails
+            ? "grid-rows-[1fr] opacity-100 mb-4"
+            : "grid-rows-[0fr] opacity-0"
+          }`}
+      >
+        <div className="overflow-hidden mt-4">
+          {locations.length > 0 && (
+            <div className="mb-4 bg-gruvbox-bg1/50 p-3 rounded-lg border border-gruvbox-bg3/50">
+              <button
+                type="button"
+                onClick={() => setLocationOpen((o) => !o)}
+                className="flex items-center gap-2 w-full text-left group"
+              >
+                <MapPin className="w-4 h-4 text-gruvbox-aqua" />
+                <p className="text-gruvbox-fg4 text-xs uppercase tracking-wider font-semibold group-hover:text-gruvbox-fg2 transition-colors">
+                  Location
+                </p>
+                <ChevronDown
+                  className={`w-3.5 h-3.5 text-gruvbox-gray transition-transform duration-300 ${locationOpen ? "rotate-180" : "rotate-0"
+                    }`}
+                />
+              </button>
+              <div
+                className={`grid transition-all duration-300 ease-in-out ${locationOpen
+                    ? "grid-rows-[1fr] opacity-100 mt-3"
+                    : "grid-rows-[0fr] opacity-0 mt-0"
+                  }`}
+              >
+                <div className="overflow-hidden">
+                  <div className="flex flex-wrap gap-2">
+                    {locations.slice(0, 3).map((loc, idx) => (
+                      <span
+                        key={`loc-${idx}`}
+                        className="px-3 py-1 text-sm bg-gruvbox-aqua/20 text-gruvbox-aqua_light rounded-full border border-gruvbox-aqua/30 flex items-center gap-1.5"
+                      >
+                        <MapPin className="w-3.5 h-3.5" />
+                        {loc}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <button
+        type="button"
+        onClick={() => setShowDetails(!showDetails)}
+        className="text-gruvbox-fg4 text-sm flex items-center justify-center w-full gap-1.5 mt-4 mb-2 hover:text-gruvbox-fg0 transition font-medium bg-gruvbox-bg1/80 hover:bg-gruvbox-bg2/50 py-2 rounded-lg border border-transparent hover:border-gruvbox-bg4/50"
+      >
+        {showDetails ? "Hide Less" : "Show More"}
+        <ChevronDown
+          className={`w-4 h-4 transition-transform duration-300 ${showDetails ? "rotate-180" : ""
+            }`}
+        />
+      </button>
+
+      <div className="flex items-center justify-between mt-2 pt-4 border-t border-gruvbox-bg3/50">
+        <span className="text-sm text-gruvbox-gray">
+          Posted: {datePosted}
+        </span>
+        <a
+          href={job.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-block px-6 py-2 bg-gruvbox-orange hover:bg-gruvbox-orange_light text-white rounded-lg transition font-semibold"
+        >
+          Apply Now
+        </a>
+      </div>
+    </div>
+  );
+}

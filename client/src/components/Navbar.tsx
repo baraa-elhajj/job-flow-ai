@@ -37,7 +37,7 @@ const Navbar = () => {
           </button>
           <Link
             to="/login"
-            className="px-6 py-2 bg-gruvbox-orange hover:bg-gruvbox-orange_light text-gruvbox-fg0 rounded-lg transition font-semibold"
+            className="px-6 py-2 bg-gruvbox-orange hover:bg-gruvbox-orange_light text-white rounded-lg transition font-semibold"
           >
             Get Started
           </Link>
