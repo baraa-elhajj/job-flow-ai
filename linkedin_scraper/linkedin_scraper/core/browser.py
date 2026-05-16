@@ -27,6 +27,7 @@ class BrowserManager:
         slow_mo: int = 0,
         viewport: Optional[Dict[str, int]] = None,
         user_agent: Optional[str] = None,
+        proxy: Optional[Dict[str, str]] = None,
         **launch_options: Any,
     ):
         """
@@ -37,12 +38,14 @@ class BrowserManager:
             slow_mo: Slow down operations by specified milliseconds
             viewport: Browser viewport size (default: 1280x720)
             user_agent: Custom user agent string
+            proxy: Playwright proxy config (server, username, password)
             **launch_options: Additional Playwright launch options
         """
         self.headless = headless
         self.slow_mo = slow_mo
         self.viewport = viewport or {"width": 1280, "height": 720}
         self.user_agent = user_agent
+        self.proxy = proxy
         self.launch_options = launch_options
 
         self._playwright: Optional[Playwright] = None
@@ -82,6 +85,9 @@ class BrowserManager:
 
             if self.user_agent:
                 context_options["user_agent"] = self.user_agent
+
+            if self.proxy:
+                context_options["proxy"] = self.proxy
 
             self._context = await self._browser.new_context(**context_options)
 
@@ -206,9 +212,16 @@ class BrowserManager:
         if not self._browser:
             raise RuntimeError("Browser not started")
 
-        self._context = await self._browser.new_context(
-            storage_state=filepath, viewport=self.viewport, user_agent=self.user_agent
-        )
+        context_options: Dict[str, Any] = {
+            "storage_state": filepath,
+            "viewport": self.viewport,
+        }
+        if self.user_agent:
+            context_options["user_agent"] = self.user_agent
+        if self.proxy:
+            context_options["proxy"] = self.proxy
+
+        self._context = await self._browser.new_context(**context_options)
 
         # Create new page
         if self._page:
