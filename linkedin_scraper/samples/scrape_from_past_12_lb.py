@@ -4,7 +4,7 @@ import os
 import random
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Set
 
 from dotenv import load_dotenv
 from pymongo import MongoClient
@@ -13,15 +13,16 @@ from linkedin_scraper.scrapers.job_search import JobSearchScraper
 from linkedin_scraper.scrapers.job import JobScraper
 from linkedin_scraper.core.browser import BrowserManager
 
+
 LINKEDIN_SCRAPER_DIR = Path(__file__).resolve().parent.parent
-load_dotenv(LINKEDIN_SCRAPER_DIR / ".env")
+load_dotenv()
 
 
 def log(message: str) -> None:
     timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
     print(f"[{timestamp}] {message}", flush=True)
 
-DEFAULT_PROXY_FILE = LINKEDIN_SCRAPER_DIR / "Webshare 10 proxies.txt"
+DEFAULT_PROXY_FILE = LINKEDIN_SCRAPER_DIR / "proxies.txt"
 
 url = "https://www.linkedin.com/jobs/search?keywords=&location=Lebanon&geoId=101834488&f_TPR=r43200&position=1&pageNum=0"
 
@@ -52,19 +53,16 @@ def is_tech_job(job_title: str) -> bool:
     return bool(TECH_JOB_PATTERN.search(job_title.lower()))
 
 
-def load_proxies(filepath: Path) -> List[Dict[str, str]]:
-    """Parse proxies from file (host:port per line). Auth from .env."""
-    if not filepath.exists():
-        return []
-
+def _parse_proxy_lines(lines: List[str]) -> List[Dict[str, str]]:
+    """Parse host:port lines into Playwright proxy configs. Auth from .env."""
     username = os.getenv("PROXY_USERNAME")
     password = os.getenv("PROXY_PASSWORD")
     if not username or not password:
-        log("⚠️ PROXY_USERNAME and PROXY_PASSWORD must be set in .env")
+        log("⚠️ PROXY_USERNAME and PROXY_PASSWORD must be set in .env or secrets")
         return []
 
     proxies: List[Dict[str, str]] = []
-    for line in filepath.read_text(encoding="utf-8").splitlines():
+    for line in lines:
         line = line.strip()
         if not line or line.startswith("#"):
             continue
@@ -83,15 +81,66 @@ def load_proxies(filepath: Path) -> List[Dict[str, str]]:
     return proxies
 
 
-def pick_random_proxy(filepath: Optional[Path] = None) -> Optional[Dict[str, str]]:
-    """Pick a random proxy from file. Override path with PROXY_FILE env var."""
-    path = filepath or Path(os.getenv("PROXY_FILE", DEFAULT_PROXY_FILE))
-    proxies = load_proxies(path)
+def load_proxies() -> tuple[List[Dict[str, str]], str]:
+    """Load proxies from PROXY_FILE, default proxies.txt, or PROXY_LIST env."""
+    proxy_file = Path(os.getenv("PROXY_FILE", DEFAULT_PROXY_FILE))
+    if proxy_file.exists():
+        lines = proxy_file.read_text(encoding="utf-8").splitlines()
+        return _parse_proxy_lines(lines), str(proxy_file)
+
+    proxy_list = os.getenv("PROXY_LIST", "").strip()
+    if proxy_list:
+        return _parse_proxy_lines(proxy_list.splitlines()), "PROXY_LIST env"
+
+    return [], str(proxy_file)
+
+
+def normalize_job_url(url: str) -> str:
+    """Normalize job URL for consistent duplicate checks."""
+    clean = url.split("?")[0].rstrip("/")
+    if clean.startswith("/"):
+        clean = f"https://www.linkedin.com{clean}"
+    return clean
+
+
+def get_existing_job_urls(collection, urls: List[str]) -> Set[str]:
+    """Return normalized linkedin_urls already stored in the database."""
+    if not urls:
+        return set()
+
+    normalized = {normalize_job_url(u) for u in urls}
+    variants = set(urls) | normalized
+    existing: Set[str] = set()
+    for doc in collection.find(
+        {"linkedin_url": {"$in": list(variants)}},
+        {"linkedin_url": 1},
+    ):
+        existing.add(normalize_job_url(doc["linkedin_url"]))
+    return existing
+
+
+def filter_items_not_in_db(
+    items: List[dict], existing_urls: Set[str]
+) -> tuple[List[dict], List[dict]]:
+    """Split items into new vs already stored (by normalized URL)."""
+    new_items: List[dict] = []
+    skipped_items: List[dict] = []
+    for item in items:
+        if normalize_job_url(item["url"]) in existing_urls:
+            skipped_items.append(item)
+        else:
+            new_items.append(item)
+    return new_items, skipped_items
+
+
+def pick_random_proxy() -> Optional[Dict[str, str]]:
+    """Pick a random proxy from file or PROXY_LIST env."""
+    proxies, source = load_proxies()
     if not proxies:
-        log(f"⚠️ No proxies found in {path}")
+        log(f"⚠️ No proxies found (checked {source})")
         return None
     proxy = random.choice(proxies)
-    log(f"Loaded {len(proxies)} proxies from {path}")
+    log(f"Loaded {len(proxies)} proxies from {source}")
     log(f"Using proxy {proxy['server']}")
     return proxy
 
@@ -101,72 +150,95 @@ async def main():
     log("Starting Lebanon tech job scraper")
     log(f"Search URL: {url}")
 
+    mongo_uri = os.getenv("MONGODB_URI")
+    if not mongo_uri:
+        log("❌ MONGODB_URI not found in .env file")
+        return
+
+    client = MongoClient(mongo_uri)
+    collection = client["test"]["Jobs"]
+
     proxy = pick_random_proxy()
     if not proxy:
         log("Continuing without proxy")
 
     log("Launching browser...")
-    async with BrowserManager(
-        headless=True,
-        # slow_mo=1000,
-        user_agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
-        proxy=proxy,
-    ) as browser:
-        search_scraper = JobSearchScraper(browser.page)
-        log("Searching LinkedIn for jobs (limit=30)...")
-        items = await search_scraper.search(url=url, limit=30)
-        log(f"Found {len(items)} job listings from search")
+    try:
+        async with BrowserManager(
+            headless=True,
+            user_agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+            proxy=proxy,
+        ) as browser:
+            search_scraper = JobSearchScraper(browser.page)
+            log("Searching LinkedIn for jobs (limit=30)...")
+            items = await search_scraper.search(url=url, limit=30)
+            log(f"Found {len(items)} job listings from search")
 
-        filtered_items = []
-        for item in items:
-            title = item.get("title", "")
-            if is_tech_job(title):
-                filtered_items.append(item)
+            search_urls = [item["url"] for item in items]
+            existing_urls = get_existing_job_urls(collection, search_urls)
+            new_items, skipped_items = filter_items_not_in_db(items, existing_urls)
+
+            if skipped_items:
+                log(
+                    f"{len(skipped_items)} jobs already in database "
+                    "(skipping before detail scrape)"
+                )
+                for item in skipped_items:
+                    log(
+                        f"  Already exists: {normalize_job_url(item['url'])} "
+                        f"— {item.get('title', 'No title')}"
+                    )
+
+            if not new_items:
+                log("All search results already exist in database. Exiting.")
+                return
+
+            log(f"{len(new_items)} new job URLs to process")
+
+            filtered_items = []
+            for item in new_items:
+                title = item.get("title", "")
+                if is_tech_job(title):
+                    filtered_items.append(item)
+                else:
+                    log(f"  Skipped (non-tech): {title or item.get('url', 'unknown')}")
+
+            log(f"Kept {len(filtered_items)} tech jobs after filtering")
+            for i, item in enumerate(filtered_items, start=1):
+                log(f"  [{i}] {item.get('title', 'No title')}")
+
+            if not filtered_items:
+                log("No new tech jobs to scrape. Exiting.")
+                return
+
+            log(f"Scraping details for {len(filtered_items)} new jobs")
+            job_scraper = JobScraper(browser.page)
+            jobs = []
+            for i, item in enumerate(filtered_items, start=1):
+                job_url = item["url"]
+                log(f"Scraping job {i}/{len(filtered_items)}: {item.get('title', 'No title')}")
+                log(f"  URL: {job_url}")
+                job = await job_scraper.scrape(job_url)
+                jobs.append(job)
+                log(
+                    f"  Done: {job.job_title or 'N/A'} @ {job.company or 'N/A'} "
+                    f"({job.location or 'N/A'})"
+                )
+
+            documents = [job.to_dict() for job in jobs]
+            for document in documents:
+                document["source"] = "linkedin"
+
+            if documents:
+                log(f"Inserting {len(documents)} new job(s) into test.Jobs...")
+                result = collection.insert_many(documents)
+                log(f"Inserted {len(result.inserted_ids)} jobs into test.Jobs")
             else:
-                log(f"  Skipped (non-tech): {title or item.get('url', 'unknown')}")
-
-        log(f"Kept {len(filtered_items)} tech jobs after filtering")
-        for i, item in enumerate(filtered_items, start=1):
-            log(f"  [{i}] {item.get('title', 'No title')}")
-
-        if not filtered_items:
-            log("No tech jobs to scrape. Exiting.")
-            return
-
-        job_scraper = JobScraper(browser.page)
-        jobs = []
-        for i, item in enumerate(filtered_items, start=1):
-            job_url = item["url"]
-            log(f"Scraping job {i}/{len(filtered_items)}: {item.get('title', 'No title')}")
-            log(f"  URL: {job_url}")
-            job = await job_scraper.scrape(job_url)
-            jobs.append(job)
-            log(
-                f"  Done: {job.job_title or 'N/A'} @ {job.company or 'N/A'} "
-                f"({job.location or 'N/A'})"
-            )
-
-        documents = [job.to_dict() for job in jobs]
-        for document in documents:
-            document["source"] = "linkedin"
-
-        mongo_uri = os.getenv("MONGODB_URI")
-        if not mongo_uri:
-            log("❌ MONGODB_URI not found in .env file")
-            return
-
-        log(f"Connecting to MongoDB ({len(documents)} documents to insert)...")
-        client = MongoClient(mongo_uri)
-        db = client["test"]
-        collection = db["Jobs"]
-        if documents:
-            result = collection.insert_many(documents)
-            log(f"Inserted {len(result.inserted_ids)} jobs into test.Jobs")
-        else:
-            log("No documents to insert")
-
+                log("No documents to insert")
+    finally:
         client.close()
-        log("Scraper finished successfully")
+
+    log("Scraper finished successfully")
 
 
 if __name__ == "__main__":
