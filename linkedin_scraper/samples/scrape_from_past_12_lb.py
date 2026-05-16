@@ -2,6 +2,7 @@ import re
 import asyncio
 import os
 import random
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, List, Optional
 
@@ -13,7 +14,12 @@ from linkedin_scraper.scrapers.job import JobScraper
 from linkedin_scraper.core.browser import BrowserManager
 
 LINKEDIN_SCRAPER_DIR = Path(__file__).resolve().parent.parent
-load_dotenv()
+load_dotenv(LINKEDIN_SCRAPER_DIR / ".env")
+
+
+def log(message: str) -> None:
+    timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+    print(f"[{timestamp}] {message}", flush=True)
 
 DEFAULT_PROXY_FILE = LINKEDIN_SCRAPER_DIR / "Webshare 10 proxies.txt"
 
@@ -54,7 +60,7 @@ def load_proxies(filepath: Path) -> List[Dict[str, str]]:
     username = os.getenv("PROXY_USERNAME")
     password = os.getenv("PROXY_PASSWORD")
     if not username or not password:
-        print("⚠️ PROXY_USERNAME and PROXY_PASSWORD must be set in .env")
+        log("⚠️ PROXY_USERNAME and PROXY_PASSWORD must be set in .env")
         return []
 
     proxies: List[Dict[str, str]] = []
@@ -64,7 +70,7 @@ def load_proxies(filepath: Path) -> List[Dict[str, str]]:
             continue
         parts = line.split(":")
         if len(parts) != 2:
-            print(f"⚠️ Skipping invalid proxy line (expected host:port): {line}")
+            log(f"⚠️ Skipping invalid proxy line (expected host:port): {line}")
             continue
         host, port = parts
         proxies.append(
@@ -82,18 +88,24 @@ def pick_random_proxy(filepath: Optional[Path] = None) -> Optional[Dict[str, str
     path = filepath or Path(os.getenv("PROXY_FILE", DEFAULT_PROXY_FILE))
     proxies = load_proxies(path)
     if not proxies:
-        print(f"⚠️ No proxies found in {path}")
+        log(f"⚠️ No proxies found in {path}")
         return None
     proxy = random.choice(proxies)
-    print(f"🌐 Using proxy {proxy['server']}")
+    log(f"Loaded {len(proxies)} proxies from {path}")
+    log(f"Using proxy {proxy['server']}")
     return proxy
 
 
 async def main():
     """Search for jobs and scrape details"""
+    log("Starting Lebanon tech job scraper")
+    log(f"Search URL: {url}")
 
     proxy = pick_random_proxy()
+    if not proxy:
+        log("Continuing without proxy")
 
+    log("Launching browser...")
     async with BrowserManager(
         headless=True,
         # slow_mo=1000,
@@ -101,37 +113,60 @@ async def main():
         proxy=proxy,
     ) as browser:
         search_scraper = JobSearchScraper(browser.page)
-        print("🔍 Searching for jobs...")
+        log("Searching LinkedIn for jobs (limit=30)...")
         items = await search_scraper.search(url=url, limit=30)
+        log(f"Found {len(items)} job listings from search")
 
         filtered_items = []
         for item in items:
-            if is_tech_job(item["title"]):
+            title = item.get("title", "")
+            if is_tech_job(title):
                 filtered_items.append(item)
+            else:
+                log(f"  Skipped (non-tech): {title or item.get('url', 'unknown')}")
+
+        log(f"Kept {len(filtered_items)} tech jobs after filtering")
+        for i, item in enumerate(filtered_items, start=1):
+            log(f"  [{i}] {item.get('title', 'No title')}")
+
+        if not filtered_items:
+            log("No tech jobs to scrape. Exiting.")
+            return
 
         job_scraper = JobScraper(browser.page)
-
         jobs = []
-        for item in filtered_items:
-            job = await job_scraper.scrape(item["url"])
-
+        for i, item in enumerate(filtered_items, start=1):
+            job_url = item["url"]
+            log(f"Scraping job {i}/{len(filtered_items)}: {item.get('title', 'No title')}")
+            log(f"  URL: {job_url}")
+            job = await job_scraper.scrape(job_url)
             jobs.append(job)
+            log(
+                f"  Done: {job.job_title or 'N/A'} @ {job.company or 'N/A'} "
+                f"({job.location or 'N/A'})"
+            )
 
         documents = [job.to_dict() for job in jobs]
         for document in documents:
             document["source"] = "linkedin"
 
-        # connect to mongodb
         mongo_uri = os.getenv("MONGODB_URI")
         if not mongo_uri:
-            print("❌ MONGODB_URI not found in .env file")
+            log("❌ MONGODB_URI not found in .env file")
             return
 
+        log(f"Connecting to MongoDB ({len(documents)} documents to insert)...")
         client = MongoClient(mongo_uri)
         db = client["test"]
         collection = db["Jobs"]
-        if len(documents) > 0:
-            collection.insert_many(documents)
+        if documents:
+            result = collection.insert_many(documents)
+            log(f"Inserted {len(result.inserted_ids)} jobs into test.Jobs")
+        else:
+            log("No documents to insert")
+
+        client.close()
+        log("Scraper finished successfully")
 
 
 if __name__ == "__main__":
