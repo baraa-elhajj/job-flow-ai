@@ -10,11 +10,11 @@ export default function HnhiringJobListItem({ job }: { job: HnhiringJobApiRespon
   const [skillsOpen, setSkillsOpen] = useState(true);
 
   return (
-    <div className="bg-gruvbox-bg1 border border-gruvbox-bg3 rounded-lg p-6 hover:border-gruvbox-orange transition shadow-sm hover:shadow-md">
+    <div className="job-card">
       <div className="flex justify-between items-start mb-4">
         <div className="flex-1">
           <div className="flex items-center mb-3">
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400 border border-orange-200 dark:border-orange-800 shadow-sm">
+            <span className="badge-hn">
               <Terminal className="w-3 h-3" />
               HN Hiring
             </span>

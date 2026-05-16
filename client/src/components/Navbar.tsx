@@ -19,7 +19,7 @@ const Navbar = () => {
   }, [isDark]);
 
   return (
-    <nav className="sticky top-0 z-50 backdrop-blur-md bg-gruvbox-bg/80 border-b border-gruvbox-bg3">
+    <nav className="sticky top-0 z-50 backdrop-blur-md bg-gruvbox-bg/90 border-b border-gruvbox-bg3">
       <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
         <Link to="/">
           <div className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition">

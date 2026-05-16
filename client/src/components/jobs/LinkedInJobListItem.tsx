@@ -17,11 +17,11 @@ export default function LinkedInJobListItem({
   const datePosted = job.posted_date;
 
   return (
-    <div className="bg-gruvbox-bg1 border border-gruvbox-bg3 rounded-lg p-6 hover:border-gruvbox-orange transition shadow-sm hover:shadow-md">
+    <div className="job-card">
       <div className="flex justify-between items-start mb-4">
         <div className="flex-1">
           <div className="flex items-center mb-3">
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 border border-blue-200 dark:border-blue-800 shadow-sm">
+            <span className="badge-linkedin">
               <Globe className="w-3 h-3" />
               LinkedIn
             </span>

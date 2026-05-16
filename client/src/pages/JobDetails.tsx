@@ -129,7 +129,7 @@ export default function JobDetail() {
         </button>
 
         {/* Job Header */}
-        <div className="bg-gruvbox-bg1 border border-gruvbox-bg3 rounded-lg p-8 mb-8 shadow-sm">
+        <div className="job-card p-8 mb-8">
           <h1 className="text-4xl font-bold text-gruvbox-fg0 mb-2">
             {job.title}
           </h1>
@@ -194,7 +194,7 @@ export default function JobDetail() {
         </div>
 
         {/* Job Description */}
-        <div className="bg-gruvbox-bg1 border border-gruvbox-bg3 rounded-lg p-8 mb-8 shadow-sm">
+        <div className="job-card p-8 mb-8">
           <h2 className="text-2xl font-bold text-gruvbox-fg0 mb-4">
             Job Description
           </h2>

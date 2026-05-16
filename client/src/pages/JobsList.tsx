@@ -73,7 +73,7 @@ export default function JobsList({ source }: { source: string }) {
           {jobs.length > 0 ? (
             jobs.map((job) => <JobsListItemRow key={job._id} job={job} />)
           ) : (
-            <div className="bg-gruvbox-bg1 border border-gruvbox-bg3 rounded-lg p-12 text-center">
+            <div className="job-card p-12 text-center">
               <p className="text-gruvbox-fg4 text-lg">No jobs found.</p>
             </div>
           )}

@@ -86,20 +86,23 @@ body {
 
 @layer base {
   :root {
-    --color-bg: 235 219 178;
-    --color-bg0_h: 242 229 188;
-    --color-bg0_s: 235 219 178;
-    --color-bg1: 213 196 161;
-    --color-bg2: 189 174 147;
-    --color-bg3: 168 153 132;
-    --color-bg4: 146 131 116;
-    --color-fg: 40 40 40;
-    --color-fg0: 29 32 33;
-    --color-fg1: 40 40 40;
-    --color-fg2: 60 56 54;
-    --color-fg3: 80 73 69;
-    --color-fg4: 102 92 84;
+    color-scheme: light;
+    /* Gruvbox light — extra-soft cream (lighter, still warm, not white) */
+    --color-bg: 253 249 235;
+    --color-bg0_h: 255 252 245;
+    --color-bg0_s: 251 245 225;
+    --color-bg1: 249 241 215;
+    --color-bg2: 245 232 205;
+    --color-bg3: 228 215 188;
+    --color-bg4: 206 192 168;
+    --color-fg: 55 50 47;
+    --color-fg0: 35 33 30;
+    --color-fg1: 55 50 47;
+    --color-fg2: 75 69 64;
+    --color-fg3: 95 87 80;
+    --color-fg4: 115 106 98;
     --color-gray: 146 131 116;
+    /* Accents: canonical Gruvbox light palette */
     --color-red: 204 36 29;
     --color-red_light: 157 0 6;
     --color-green: 152 151 26;
@@ -116,7 +119,12 @@ body {
     --color-orange_light: 175 58 3;
   }
 
+  html:not(.dark) body {
+    background-color: rgb(var(--color-bg));
+  }
+
   .dark {
+    color-scheme: dark;
     --color-bg: 40 40 40;
     --color-bg0_h: 29 32 33;
     --color-bg0_s: 50 48 47;
@@ -145,5 +153,50 @@ body {
     --color-aqua_light: 142 192 124;
     --color-orange: 214 93 14;
     --color-orange_light: 254 128 25;
+  }
+}
+
+@layer components {
+  .job-card {
+    @apply bg-gruvbox-bg1 border border-gruvbox-bg3 rounded-xl p-6 transition-all duration-200;
+    @apply hover:border-gruvbox-orange;
+  }
+
+  html:not(.dark) .job-card {
+    box-shadow: 0 1px 2px rgb(35 33 30 / 0.04);
+  }
+
+  html:not(.dark) .job-card:hover {
+    box-shadow: 0 2px 6px rgb(35 33 30 / 0.06);
+  }
+
+  .badge-source {
+    @apply inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border;
+  }
+
+  .badge-linkedin {
+    @apply badge-source;
+    background-color: rgb(var(--color-blue) / 0.14);
+    color: rgb(var(--color-blue_light));
+    border-color: rgb(var(--color-blue) / 0.28);
+  }
+
+  .dark .badge-linkedin {
+    background-color: rgb(var(--color-blue) / 0.22);
+    color: rgb(var(--color-blue_light));
+    border-color: rgb(var(--color-blue) / 0.35);
+  }
+
+  .badge-hn {
+    @apply badge-source;
+    background-color: rgb(var(--color-orange) / 0.14);
+    color: rgb(var(--color-orange_light));
+    border-color: rgb(var(--color-orange) / 0.28);
+  }
+
+  .dark .badge-hn {
+    background-color: rgb(var(--color-orange) / 0.22);
+    color: rgb(var(--color-orange_light));
+    border-color: rgb(var(--color-orange) / 0.35);
   }
 }

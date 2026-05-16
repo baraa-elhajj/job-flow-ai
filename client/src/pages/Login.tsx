@@ -4,7 +4,7 @@ export default function Login() {
   return (
     <div className="min-h-screen bg-gruvbox-bg flex items-center justify-center px-4">
       <div className="w-full max-w-md">
-        <div className="bg-gruvbox-bg1 rounded-lg shadow-2xl p-8">
+        <div className="job-card p-8">
           <div className="mb-8 text-center">
             <h1 className="text-4xl font-bold text-gruvbox-fg0 mb-2">JobFlow AI</h1>
             <p className="text-gruvbox-fg2">Sign in to your account</p>
@@ -22,7 +22,7 @@ export default function Login() {
                 id="email"
                 type="email"
                 placeholder="you@example.com"
-                className="w-full px-4 py-2 border border-gruvbox-bg4 rounded-lg focus:outline-none focus:ring-2 focus:ring-gruvbox-orange focus:border-transparent bg-gray-50 transition"
+                className="w-full px-4 py-2 border border-gruvbox-bg3 rounded-lg focus:outline-none focus:ring-2 focus:ring-gruvbox-orange focus:border-transparent bg-gruvbox-bg0_h text-gruvbox-fg1 transition"
               />
             </div>
 
@@ -36,7 +36,7 @@ export default function Login() {
               <input
                 id="password"
                 type="password"
-                className="w-full px-4 py-2 border border-gruvbox-bg4 rounded-lg focus:outline-none focus:ring-2 focus:ring-gruvbox-orange focus:border-transparent bg-gray-50 transition"
+                className="w-full px-4 py-2 border border-gruvbox-bg3 rounded-lg focus:outline-none focus:ring-2 focus:ring-gruvbox-orange focus:border-transparent bg-gruvbox-bg0_h text-gruvbox-fg1 transition"
               />
             </div>
 
@@ -60,7 +60,7 @@ export default function Login() {
             </p>
           </div>
 
-          <div className="flex justify-center mt-6 pt-6 border-t border-gray-200">
+          <div className="flex justify-center mt-6 pt-6 border-t border-gruvbox-bg3">
             <Link
               to="/"
               className="text-sm text-gruvbox-orange_light hover:text-gruvbox-orange font-semibold text-center"
