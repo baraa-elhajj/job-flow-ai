@@ -1,0 +1,67 @@
+import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
+import { Search, X } from "lucide-react";
+
+interface SearchJobsProps {
+  onSearchChange?: (query: string) => void;
+}
+
+export default function SearchJobs({ onSearchChange }: SearchJobsProps) {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const query = searchParams.get("q") || "";
+  const [localSearch, setLocalSearch] = useState(query);
+
+  useEffect(() => {
+    setLocalSearch(query);
+  }, [query]);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setSearchParams((prev) => {
+        if (localSearch.trim()) {
+          prev.set("q", localSearch.trim());
+        } else {
+          prev.delete("q");
+        }
+        prev.set("page", "1");
+        return prev;
+      });
+
+      if (onSearchChange) {
+        onSearchChange(localSearch.trim());
+      }
+    }, 300); // 300ms delay
+
+    return () => clearTimeout(handler);
+  }, [localSearch, setSearchParams, onSearchChange]);
+
+  return (
+    <div className="mb-8">
+      <div className="relative">
+        <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gruvbox-fg4" />
+        <input
+          type="text"
+          placeholder="Search jobs by title, company, or skills..."
+          value={localSearch}
+          onChange={(e) => setLocalSearch(e.target.value)}
+          className="w-full pl-12 pr-12 py-3 bg-gruvbox-bg1 border border-gruvbox-bg3 rounded-lg text-gruvbox-fg0 placeholder-gruvbox-fg4 focus:outline-none focus:border-gruvbox-orange transition"
+        />
+        {localSearch && (
+          <button
+            onClick={() => setLocalSearch("")}
+            className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gruvbox-fg4 hover:text-gruvbox-fg0 transition"
+            aria-label="Clear search"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        )}
+      </div>
+      {query && (
+        <p className="mt-2 text-sm text-gruvbox-fg4">
+          Search results for "
+          <span className="text-gruvbox-fg0 font-semibold">{query}</span>"
+        </p>
+      )}
+    </div>
+  );
+}
