@@ -17,23 +17,26 @@ export default function SearchJobs({ onSearchChange }: SearchJobsProps) {
 
   useEffect(() => {
     const handler = setTimeout(() => {
-      setSearchParams((prev) => {
-        if (localSearch.trim()) {
-          prev.set("q", localSearch.trim());
-        } else {
-          prev.delete("q");
-        }
-        prev.set("page", "1");
-        return prev;
-      });
+      if (localSearch.trim() !== query) {
+        setSearchParams((prev) => {
+          if (localSearch.trim()) {
+            prev.set("q", localSearch.trim());
+          } else {
+            prev.delete("q");
+          }
 
-      if (onSearchChange) {
-        onSearchChange(localSearch.trim());
+          prev.set("page", "1");
+          return prev;
+        });
+
+        if (onSearchChange) {
+          onSearchChange(localSearch.trim());
+        }
       }
-    }, 300); // 300ms delay
+    }, 300); // 300ms delay (debounce)
 
     return () => clearTimeout(handler);
-  }, [localSearch, setSearchParams, onSearchChange]);
+  }, [localSearch, query, setSearchParams, onSearchChange]);
 
   return (
     <div className="mb-8">

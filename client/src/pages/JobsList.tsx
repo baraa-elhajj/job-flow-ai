@@ -22,9 +22,12 @@ export default function JobsList({ source }: { source: string }) {
       try {
         const endpoint = `/api/jobs?src=${source}`;
         const params = new URLSearchParams();
+
         params.set("page", String(page));
         params.set("limit", "20");
+
         if (query) params.set("q", query);
+
         const res = await fetch(`${endpoint}&${params.toString()}`);
         const data = await res.json();
         if (data.success) {
