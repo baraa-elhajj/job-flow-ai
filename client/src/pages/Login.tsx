@@ -1,66 +1,73 @@
-import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { Loader2 } from "lucide-react";
+import { useAuth } from "../context/authContext";
+import GoogleSignInButton from "../components/GoogleSignInButton";
 
 export default function Login() {
+  const { loginWithGoogle, user, loading } = useAuth();
+  const navigate = useNavigate();
+  const [error, setError] = useState<string | null>(null);
+  const [signingIn, setSigningIn] = useState(false);
+
+  useEffect(() => {
+    if (!loading && user) {
+      navigate("/", { replace: true });
+    }
+  }, [loading, user, navigate]);
+
+  const handleGoogleSuccess = async (credentialResponse: {
+    credential?: string;
+  }) => {
+    if (!credentialResponse.credential) {
+      setError("Google did not return a credential. Please try again.");
+      return;
+    }
+
+    setSigningIn(true);
+    setError(null);
+    try {
+      await loginWithGoogle(credentialResponse.credential);
+      navigate("/", { replace: true });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Sign-in failed");
+    } finally {
+      setSigningIn(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gruvbox-bg flex items-center justify-center px-4">
       <div className="w-full max-w-md">
         <div className="job-card p-8">
           <div className="mb-8 text-center">
-            <h1 className="text-4xl font-bold text-gruvbox-fg0 mb-2">JobFlow AI</h1>
-            <p className="text-gruvbox-fg2">Sign in to your account</p>
+            <h1 className="text-4xl font-bold text-gruvbox-fg0 mb-2">
+              JobFlow AI
+            </h1>
+            <p className="text-gruvbox-fg2">Sign in to continue</p>
           </div>
 
-          <form className="space-y-5">
-            <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium text-gruvbox-fg2 mb-2"
-              >
-                Email Address
-              </label>
-              <input
-                id="email"
-                type="email"
-                placeholder="you@example.com"
-                className="w-full px-4 py-2 border border-gruvbox-bg3 rounded-lg focus:outline-none focus:ring-2 focus:ring-gruvbox-orange focus:border-transparent bg-gruvbox-bg0_h text-gruvbox-fg1 transition"
+          <div className="flex flex-col items-center gap-4 w-full">
+            {signingIn ? (
+              <div className="flex items-center gap-2 text-gruvbox-fg3 py-3">
+                <Loader2 className="w-5 h-5 animate-spin" />
+                <span>Signing you in…</span>
+              </div>
+            ) : (
+              <GoogleSignInButton
+                onSuccess={handleGoogleSuccess}
+                onError={() =>
+                  setError("Google sign-in was cancelled or failed.")
+                }
               />
-            </div>
+            )}
 
-            <div>
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium text-gruvbox-fg2 mb-2"
-              >
-                Password
-              </label>
-              <input
-                id="password"
-                type="password"
-                className="w-full px-4 py-2 border border-gruvbox-bg3 rounded-lg focus:outline-none focus:ring-2 focus:ring-gruvbox-orange focus:border-transparent bg-gruvbox-bg0_h text-gruvbox-fg1 transition"
-              />
-            </div>
-
-            <button
-              type="submit"
-              className="w-full bg-gruvbox-orange hover:bg-gruvbox-orange_light text-white font-semibold py-2 px-4 rounded-lg transition duration-200 ease-in-out"
-            >
-              Sign In
-            </button>
-          </form>
-
-          <div className="mt-6 text-center text-sm">
-            <p className="text-gruvbox-fg2">
-              Don't have an account?{" "}
-              <a
-                href="#"
-                className="text-gruvbox-orange_light hover:text-gruvbox-orange font-semibold"
-              >
-                Sign up
-              </a>
-            </p>
+            {error && (
+              <p className="text-sm text-gruvbox-red text-center">{error}</p>
+            )}
           </div>
 
-          <div className="flex justify-center mt-6 pt-6 border-t border-gruvbox-bg3">
+          <div className="flex justify-center mt-8 pt-6 border-t border-gruvbox-bg3">
             <Link
               to="/"
               className="text-sm text-gruvbox-orange_light hover:text-gruvbox-orange font-semibold text-center"
