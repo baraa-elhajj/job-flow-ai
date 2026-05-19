@@ -10,17 +10,17 @@ class Job(BaseModel):
     
     Represents a job posting on LinkedIn with all scraped data.
     """
-    linkedin_url: str
-    job_title: Optional[str] = None
-    company: Optional[str] = None
-    company_linkedin_url: Optional[str] = None
+    url: str
+    title: Optional[str] = None
+    companyName: Optional[str] = None
+    CompanyLinkedInUrl: Optional[str] = None
     location: Optional[str] = None
-    posted_date: Optional[str] = None
-    applicant_count: Optional[str] = None
-    job_description: Optional[str] = None
+    datePosted: Optional[str] = None
+    applicantCount: Optional[str] = None
+    text: Optional[str] = None
     benefits: Optional[str] = None
     
-    @field_validator('linkedin_url')
+    @field_validator('url')
     @classmethod
     def validate_linkedin_url(cls, v: str) -> str:
         """Validate that URL is a LinkedIn job URL."""
@@ -52,8 +52,8 @@ class Job(BaseModel):
     def __repr__(self) -> str:
         """String representation."""
         return (
-            f"<Job {self.job_title} at {self.company}\n"
+            f"<Job {self.title} at {self.companyName}\n"
             f"  Location: {self.location}\n"
-            f"  Posted: {self.posted_date}\n"
-            f"  Applicants: {self.applicant_count}>"
+            f"  Posted: {self.datePosted}\n"
+            f"  Applicants: {self.applicantCount}>"
         )

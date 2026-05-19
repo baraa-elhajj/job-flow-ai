@@ -1,38 +1,38 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema, Document } from "mongoose";
 
 // Base interface for plain job data (used in scraping logic)
 export interface HNHiringJobData {
-    by: string;
-    datePosted: string;
-    title: string;
-    text: string;
-    links: string[];
-    monthYear: string;
-    /** Always `hnhiring` for jobs scraped from hnhiring.com */
-    source: 'hnhiring';
-    companyName?: string;
-    jobTitle?: string[];
-    jobType?: string[];
-    employmentType?: string[];
-    location?: string[];
-    skills?: string[];
-    seniority?: string[];
-    salary?: string[];
-    visaSponsorship?: string[];
-    url?: string[];
+  by: string;
+  datePosted: string;
+  title: string;
+  text: string;
+  links: string[];
+  monthYear: string;
+  source: "hnhiring";
+  companyName?: string;
+  jobTitle?: string[];
+  jobType?: string[];
+  employmentType?: string[];
+  location?: string[];
+  skills?: string[];
+  seniority?: string[];
+  salary?: string[];
+  visaSponsorship?: string[];
+  url?: string[];
 }
 
 // Mongoose Document interface
 export interface IHNHiringJob extends HNHiringJobData, Document {}
 
-const HNHiringJobSchema: Schema = new Schema({
+const HNHiringJobSchema: Schema = new Schema(
+  {
     by: { type: String, required: true },
     datePosted: { type: String },
     title: { type: String },
     text: { type: String },
     links: [{ type: String }],
     monthYear: { type: String, required: true },
-    source: { type: String, default: 'hnhiring' },
+    source: { type: String, default: "hnhiring" },
     companyName: { type: String },
     jobTitle: [{ type: String }],
     jobType: [{ type: String }],
@@ -43,6 +43,11 @@ const HNHiringJobSchema: Schema = new Schema({
     salary: [{ type: String }],
     visaSponsorship: [{ type: String }],
     url: [{ type: String }],
-}, { timestamps: true });
+  },
+  { timestamps: true },
+);
 
-export const HNHiringJob = mongoose.model<IHNHiringJob>('HNHiringJob', HNHiringJobSchema);
+export const HNHiringJob = mongoose.model<IHNHiringJob>(
+  "HNHiringJob",
+  HNHiringJobSchema,
+);
