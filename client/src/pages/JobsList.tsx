@@ -5,7 +5,14 @@ import type { JobsListItem } from "../types/job";
 import JobsListItemRow from "../components/jobs/JobsListItemRow";
 import SearchJobs from "../components/SearchJobs";
 
-export default function JobsList({ source }: { source: string }) {
+export default function JobsList({
+  source,
+  showSearch,
+}: {
+  source: string;
+  showSearch: boolean;
+  setShowSearch: (value: boolean) => void;
+}) {
   const [jobs, setJobs] = useState<JobsListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -62,7 +69,11 @@ export default function JobsList({ source }: { source: string }) {
   return (
     <div className="min-h-screen bg-gruvbox-bg">
       <section className="max-w-6xl mx-auto px-6 pb-12">
-        <SearchJobs />
+        <div
+          className={`transition-all duration-500 ease-in-out overflow-hidden ${showSearch ? "max-h-48 opacity-100" : "max-h-0 opacity-0"}`}
+        >
+          <SearchJobs />
+        </div>
 
         {loading ? (
           <div className="py-24 flex items-center justify-center">
