@@ -8,73 +8,98 @@ const JOB_SOURCES = ["linkedin", "hnhiring", "all"] as const;
 type JobSource = (typeof JOB_SOURCES)[number];
 
 function parseJobSourceQuery(raw: unknown): JobSource | null {
-    if (raw === undefined || raw === null || raw === "") {
-        return null;
-    }
-    if (typeof raw !== "string") {
-        return null;
-    }
-    const s = raw.trim().toLowerCase();
-    if (s === "") {
-        return null;
-    }
-    if ((JOB_SOURCES as readonly string[]).includes(s)) {
-        return s as JobSource;
-    }
+  if (raw === undefined || raw === null || raw === "") {
     return null;
+  }
+  if (typeof raw !== "string") {
+    return null;
+  }
+  const s = raw.trim().toLowerCase();
+  if (s === "") {
+    return null;
+  }
+  if ((JOB_SOURCES as readonly string[]).includes(s)) {
+    return s as JobSource;
+  }
+  return null;
 }
 
 /**
- * GET /api/jobs?page=&limit=&source=
+ * GET /api/jobs?page=&limit=&source=&q=
  * Unified `Jobs` collection. Optional `source`: `linkedin` | `hnhiring` (omit for all).
+ * Optional `q`: search query to filter by title, company, and description.
  */
 export async function fetchJobs(req: Request, res: Response) {
-    try {
-        const db = mongoose.connection.db;
-        if (!db) {
-            return res.status(500).json({
-                success: false,
-                error: "Database connection not established",
-            });
-        }
-
-        console.log("req.query", req.query);
-
-        const sourceParam = parseJobSourceQuery(req.query.src);
-        if (req.query.source !== undefined && req.query.src !== "" && sourceParam === null) {
-            return res.status(400).json({
-                success: false,
-                error: `Invalid source. Use one of: ${JOB_SOURCES.join(", ")}`,
-            });
-        }
-
-        const page = Math.max(1, parseInt(req.query.page as string, 10) || 1);
-        const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string, 10) || 20));
-        const skip = (page - 1) * limit;
-
-        const filter = sourceParam !== "all" ? { source: sourceParam } : {};
-
-        const collection = db.collection(JOBS_COLLECTION);
-        const [jobs, total] = await Promise.all([
-            collection.find(filter).sort({ _id: -1 }).skip(skip).limit(limit).toArray(),
-            collection.countDocuments(filter),
-        ]);
-
-        res.json({
-            success: true,
-            count: jobs.length,
-            total,
-            page,
-            totalPages: Math.ceil(total / limit) || 1,
-            jobs,
-        });
-    } catch (error) {
-        console.error("Error fetching Jobs:", error);
-        res.status(500).json({
-            success: false,
-            error: String(error),
-        });
+  try {
+    const db = mongoose.connection.db;
+    if (!db) {
+      return res.status(500).json({
+        success: false,
+        error: "Database connection not established",
+      });
     }
+
+    console.log("req.query", req.query);
+
+    const sourceParam = parseJobSourceQuery(req.query.src);
+    if (
+      req.query.source !== undefined &&
+      req.query.src !== "" &&
+      sourceParam === null
+    ) {
+      return res.status(400).json({
+        success: false,
+        error: `Invalid source. Use one of: ${JOB_SOURCES.join(", ")}`,
+      });
+    }
+
+    const page = Math.max(1, parseInt(req.query.page as string, 10) || 1);
+    const limit = Math.min(
+      100,
+      Math.max(1, parseInt(req.query.limit as string, 10) || 20),
+    );
+    const skip = (page - 1) * limit;
+    const searchQuery = ((req.query.q as string) || "").trim();
+
+    const filter: Record<string, any> =
+      sourceParam !== "all" ? { source: sourceParam } : {};
+
+    // Add search filter if query is provided
+    if (searchQuery) {
+      const searchRegex = { $regex: searchQuery, $options: "i" };
+      filter.$or = [
+        { title: searchRegex },
+        { companyName: searchRegex },
+        { skills: searchRegex },
+      ];
+    }
+
+    const collection = db.collection(JOBS_COLLECTION);
+    const [jobs, total] = await Promise.all([
+      collection
+        .find(filter)
+        .sort({ _id: -1 })
+        .skip(skip)
+        .limit(limit)
+        .toArray(),
+      collection.countDocuments(filter),
+    ]);
+
+    res.json({
+      success: true,
+      count: jobs.length,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit) || 1,
+      jobs,
+    });
+  } catch (error) {
+    console.error("Error fetching Jobs:", error);
+    res.status(500).json({
+      success: false,
+      error: String(error),
+    });
+  }
 }
 
 // GET /api/jobs/hnhiring?month=?&year=?
@@ -147,51 +172,54 @@ export async function fetchJobs(req: Request, res: Response) {
 // }
 
 // GET /api/jobs/parsed/:id
-export async function fetchParsedJobById(req: Request<{ id: string }>, res: Response) {
-    try {
-        const db = mongoose.connection.db;
-        if (!db) {
-            return res.status(500).json({
-                success: false,
-                error: 'Database connection not established',
-            });
-        }
-
-        const { ObjectId } = mongoose.Types;
-        let objectId;
-        try {
-            objectId = new ObjectId(req.params.id);
-        } catch {
-            return res.status(400).json({
-                success: false,
-                error: 'Invalid job ID format',
-            });
-        }
-
-        const collection = db.collection(JOBS_COLLECTION);
-        const job = await collection.findOne({
-            _id: objectId,
-            source: 'hnhiring',
-        });
-
-        if (!job) {
-            return res.status(404).json({
-                success: false,
-                error: 'Job not found',
-            });
-        }
-
-        res.json({
-            success: true,
-            job,
-        });
-    } catch (error) {
-        console.error('Error fetching job by ID:', error);
-        res.status(500).json({
-            success: false,
-            error: String(error),
-        });
+export async function fetchParsedJobById(
+  req: Request<{ id: string }>,
+  res: Response,
+) {
+  try {
+    const db = mongoose.connection.db;
+    if (!db) {
+      return res.status(500).json({
+        success: false,
+        error: "Database connection not established",
+      });
     }
+
+    const { ObjectId } = mongoose.Types;
+    let objectId;
+    try {
+      objectId = new ObjectId(req.params.id);
+    } catch {
+      return res.status(400).json({
+        success: false,
+        error: "Invalid job ID format",
+      });
+    }
+
+    const collection = db.collection(JOBS_COLLECTION);
+    const job = await collection.findOne({
+      _id: objectId,
+      source: "hnhiring",
+    });
+
+    if (!job) {
+      return res.status(404).json({
+        success: false,
+        error: "Job not found",
+      });
+    }
+
+    res.json({
+      success: true,
+      job,
+    });
+  } catch (error) {
+    console.error("Error fetching job by ID:", error);
+    res.status(500).json({
+      success: false,
+      error: String(error),
+    });
+  }
 }
 
 // GET /api/jobs/linkedin
