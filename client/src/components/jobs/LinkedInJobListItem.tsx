@@ -10,11 +10,11 @@ export default function LinkedInJobListItem({
   const [showDetails, setShowDetails] = useState(false);
   const [locationOpen, setLocationOpen] = useState(true);
 
-  const company = job.company ?? "Unknown Company";
-  const descriptionText = job.job_description ?? "No description provided";
+  const company = job.companyName ?? "Unknown Company";
+  const descriptionText = job.text ?? "No description provided";
   const displayDescription = `<p>${descriptionText.replace(/\n/g, "</p><p>")}</p>`;
   const locations = job.location ? [job.location] : [];
-  const datePosted = job.posted_date;
+  const datePosted = job.datePosted;
 
   return (
     <div className="job-card">
@@ -29,7 +29,7 @@ export default function LinkedInJobListItem({
           <h3
             className={`text-2xl font-bold text-gruvbox-fg0 mb-1 ${showDetails ? "" : "line-clamp-2"}`}
           >
-            {job.job_title}
+            {job.title}
           </h3>
           <p className="text-gruvbox-orange_light text-lg font-medium">
             {company}
@@ -113,7 +113,7 @@ export default function LinkedInJobListItem({
       <div className="flex items-center justify-between mt-2 pt-4 border-t border-gruvbox-bg3/50">
         <span className="text-sm text-gruvbox-gray">Posted: {datePosted}</span>
         <a
-          href={job.linkedin_url}
+          href={job.url}
           target="_blank"
           rel="noopener noreferrer"
           className="inline-block px-6 py-2 bg-gruvbox-orange hover:bg-gruvbox-orange_light text-white rounded-lg transition font-semibold"

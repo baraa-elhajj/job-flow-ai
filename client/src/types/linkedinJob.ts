@@ -3,11 +3,14 @@
  */
 export interface LinkedInJobApiResponse {
   _id: string;
-  job_title: string;
-  company?: string;
+  title: string;
+  companyName?: string;
+  companyLinkedInUrl?: string;
   location?: string;
-  job_description?: string;
-  linkedin_url: string;
-  posted_date: string;
+  text?: string;
+  url: string;
+  datePosted: string;
+  applicantCount?: string;
+  benefits?: string;
   source?: "linkedin";
 }
