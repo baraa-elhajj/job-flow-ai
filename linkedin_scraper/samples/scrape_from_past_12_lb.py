@@ -3,26 +3,23 @@ import asyncio
 import os
 import random
 from datetime import datetime, timezone
-from pathlib import Path
 from typing import Dict, List, Optional, Set
 
 from dotenv import load_dotenv
 from pymongo import MongoClient
+import requests
 
 from linkedin_scraper.scrapers.job_search import JobSearchScraper
 from linkedin_scraper.scrapers.job import JobScraper
 from linkedin_scraper.core.browser import BrowserManager
 
 
-LINKEDIN_SCRAPER_DIR = Path(__file__).resolve().parent.parent
 load_dotenv()
 
 
 def log(message: str) -> None:
     timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
     print(f"[{timestamp}] {message}", flush=True)
-
-DEFAULT_PROXY_FILE = LINKEDIN_SCRAPER_DIR / "proxies.txt"
 
 url = "https://www.linkedin.com/jobs/search?keywords=&location=Lebanon&geoId=101834488&f_TPR=r43200&position=1&pageNum=0"
 
@@ -54,23 +51,22 @@ def is_tech_job(job_title: str) -> bool:
 
 
 def _parse_proxy_lines(lines: List[str]) -> List[Dict[str, str]]:
-    """Parse host:port lines into Playwright proxy configs. Auth from .env."""
-    username = os.getenv("PROXY_USERNAME")
-    password = os.getenv("PROXY_PASSWORD")
-    if not username or not password:
-        log("⚠️ PROXY_USERNAME and PROXY_PASSWORD must be set in .env or secrets")
-        return []
-
+    """Parse Webshare lines (host:port:username:password) into Playwright configs."""
     proxies: List[Dict[str, str]] = []
     for line in lines:
         line = line.strip()
         if not line or line.startswith("#"):
             continue
-        parts = line.split(":")
-        if len(parts) != 2:
-            log(f"⚠️ Skipping invalid proxy line (expected host:port): {line}")
+
+        parts = line.split(":", 3)
+        if len(parts) != 4:
+            log(
+                "⚠️ Skipping invalid proxy line "
+                "(expected host:port:username:password)"
+            )
             continue
-        host, port = parts
+
+        host, port, username, password = parts
         proxies.append(
             {
                 "server": f"http://{host}:{port}",
@@ -81,18 +77,29 @@ def _parse_proxy_lines(lines: List[str]) -> List[Dict[str, str]]:
     return proxies
 
 
+def fetch_proxy_lines_from_url(url: str) -> List[str]:
+    """Download proxy list from Webshare (or any plain-text URL)."""
+    try:
+        response = requests.get(url, timeout=30)
+        response.raise_for_status()
+        return response.text.splitlines()
+    except requests.RequestException as exc:
+        # log(f"⚠️ Failed to download proxy list: {exc}")
+        return []
+
+
 def load_proxies() -> tuple[List[Dict[str, str]], str]:
-    """Load proxies from PROXY_FILE, default proxies.txt, or PROXY_LIST env."""
-    proxy_file = Path(os.getenv("PROXY_FILE", DEFAULT_PROXY_FILE))
-    if proxy_file.exists():
-        lines = proxy_file.read_text(encoding="utf-8").splitlines()
-        return _parse_proxy_lines(lines), str(proxy_file)
+    """Download proxies from PROXY_DOWNLOAD_URL (fresh on each call)."""
+    download_url = os.getenv("PROXY_DOWNLOAD_URL", "").strip()
+    if not download_url:
+        log("⚠️ PROXY_DOWNLOAD_URL is not set")
+        return [], "PROXY_DOWNLOAD_URL"
 
-    proxy_list = os.getenv("PROXY_LIST", "").strip()
-    if proxy_list:
-        return _parse_proxy_lines(proxy_list.splitlines()), "PROXY_LIST env"
-
-    return [], str(proxy_file)
+    lines = fetch_proxy_lines_from_url(download_url)
+    proxies = _parse_proxy_lines(lines)
+    if not proxies:
+        log("⚠️ No valid proxies parsed from download")
+    return proxies, "PROXY_DOWNLOAD_URL"
 
 
 def normalize_job_url(url: str) -> str:
@@ -134,7 +141,7 @@ def filter_items_not_in_db(
 
 
 def pick_random_proxy() -> Optional[Dict[str, str]]:
-    """Pick a random proxy from file or PROXY_LIST env."""
+    """Download proxy list from Webshare and pick one at random."""
     proxies, source = load_proxies()
     if not proxies:
         log(f"⚠️ No proxies found (checked {source})")
