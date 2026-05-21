@@ -84,7 +84,7 @@ def fetch_proxy_lines_from_url(url: str) -> List[str]:
         response.raise_for_status()
         return response.text.splitlines()
     except requests.RequestException as exc:
-        # log(f"⚠️ Failed to download proxy list: {exc}")
+        log(f"⚠️ Failed to download proxy list: {exc}")
         return []
 
 
