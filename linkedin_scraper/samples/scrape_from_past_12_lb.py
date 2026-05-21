@@ -77,8 +77,20 @@ def _parse_proxy_lines(lines: List[str]) -> List[Dict[str, str]]:
     return proxies
 
 
+def _normalize_download_url(url: str) -> str:
+    """Strip quotes/whitespace and ensure an http(s) scheme for requests."""
+    url = url.strip().strip('"').strip("'")
+    if url and not url.startswith(("http://", "https://")):
+        url = f"https://{url}"
+    return url
+
+
 def fetch_proxy_lines_from_url(url: str) -> List[str]:
     """Download proxy list from Webshare (or any plain-text URL)."""
+    url = _normalize_download_url(url)
+    if not url.startswith(("http://", "https://")):
+        log("⚠️ PROXY_DOWNLOAD_URL must be a full http(s) URL")
+        return []
     try:
         response = requests.get(url, timeout=30)
         response.raise_for_status()
@@ -90,7 +102,7 @@ def fetch_proxy_lines_from_url(url: str) -> List[str]:
 
 def load_proxies() -> tuple[List[Dict[str, str]], str]:
     """Download proxies from PROXY_DOWNLOAD_URL (fresh on each call)."""
-    download_url = os.getenv("PROXY_DOWNLOAD_URL", "").strip()
+    download_url = _normalize_download_url(os.getenv("PROXY_DOWNLOAD_URL", ""))
     if not download_url:
         log("⚠️ PROXY_DOWNLOAD_URL is not set")
         return [], "PROXY_DOWNLOAD_URL"
