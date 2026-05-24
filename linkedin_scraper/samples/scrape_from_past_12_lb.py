@@ -240,7 +240,7 @@ async def main():
                 job = await job_scraper.scrape(job_url)
                 jobs.append(job)
                 log(
-                    f"  Done: {job.job_title or 'N/A'} @ {job.company or 'N/A'} "
+                    f"  Done: {job.title or 'N/A'} @ {job.companyName or 'N/A'} "
                     f"({job.location or 'N/A'})"
                 )
 
