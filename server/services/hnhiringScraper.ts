@@ -3,7 +3,7 @@ import * as cheerio from "cheerio";
 import { mkdir, readFile, writeFile } from "fs/promises";
 import path from "path";
 import { fileURLToPath } from "url";
-import type { HNHiringJobData } from "../models/HNHiringJob.js";
+import type { HNHiringJobData } from "../models/HNHiringJobData.js";
 import { Job } from "../models/Job.js";
 
 const CHECKPOINT_FILE = path.join(
