@@ -1,9 +1,7 @@
 import type { Request, Response } from "express";
 import mongoose from "mongoose";
-import { LinkedInJob } from "../models/LinkedInJob.js";
-// import { scrapeHNHiring } from "../services/hnhiringScraper.js";
 
-const JOBS_COLLECTION = "Jobs";
+const JOBS_COLLECTION = "jobs";
 const JOB_SOURCES = ["linkedin", "hnhiring", "all"] as const;
 type JobSource = (typeof JOB_SOURCES)[number];
 
@@ -26,7 +24,7 @@ function parseJobSourceQuery(raw: unknown): JobSource | null {
 
 /**
  * GET /api/jobs?page=&limit=&source=&q=
- * Unified `Jobs` collection. Optional `source`: `linkedin` | `hnhiring` (omit for all).
+ * Unified `jobs` collection. Optional `source`: `linkedin` | `hnhiring` (omit for all).
  * Optional `q`: search query to filter by title, company, and description.
  */
 export async function fetchJobs(req: Request, res: Response) {
@@ -39,11 +37,9 @@ export async function fetchJobs(req: Request, res: Response) {
       });
     }
 
-    console.log("req.query", req.query);
-
     const sourceParam = parseJobSourceQuery(req.query.src);
     if (
-      req.query.source !== undefined &&
+      req.query.src !== undefined &&
       req.query.src !== "" &&
       sourceParam === null
     ) {

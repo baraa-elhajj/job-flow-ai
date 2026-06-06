@@ -1,1 +1,2 @@
-Woosmap | https://www.woosmap.com/ | Backend Engineer (Mid-level & Senior) | HYBRID (London, Paris, Montpellier) or REMOTE (UTC-1 to UTC+2) | Full-time
+june-2026|vvd | Design Engineer | Remote (work from anywhere) | Full-time | React, TypeScript, Next.js
+https://vvd.world
