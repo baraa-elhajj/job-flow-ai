@@ -175,7 +175,7 @@ async def main():
         return
 
     client = MongoClient(mongo_uri)
-    collection = client["test"]["Jobs"]
+    collection = client["test"]["jobs"]
 
     proxy = pick_random_proxy()
     if not proxy:
@@ -249,9 +249,9 @@ async def main():
                 document["source"] = "linkedin"
 
             if documents:
-                log(f"Inserting {len(documents)} new job(s) into test.Jobs...")
+                log(f"Inserting {len(documents)} new job(s) into test.jobs...")
                 result = collection.insert_many(documents)
-                log(f"Inserted {len(result.inserted_ids)} jobs into test.Jobs")
+                log(f"Inserted {len(result.inserted_ids)} jobs into test.jobs")
             else:
                 log("No documents to insert")
     finally:
