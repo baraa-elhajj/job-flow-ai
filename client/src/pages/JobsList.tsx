@@ -72,7 +72,7 @@ export default function JobsList({
         <div
           className={`transition-all duration-500 ease-in-out overflow-hidden ${showSearch ? "max-h-48 opacity-100" : "max-h-0 opacity-0"}`}
         >
-          <SearchJobs />
+          <SearchJobs showSearch={showSearch} />
         </div>
 
         {loading ? (

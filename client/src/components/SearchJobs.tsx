@@ -1,15 +1,20 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Search, X } from "lucide-react";
 
 interface SearchJobsProps {
   onSearchChange?: (query: string) => void;
+  showSearch?: boolean;
 }
 
-export default function SearchJobs({ onSearchChange }: SearchJobsProps) {
+export default function SearchJobs({
+  onSearchChange,
+  showSearch,
+}: SearchJobsProps) {
   const [searchParams, setSearchParams] = useSearchParams();
   const query = searchParams.get("q") || "";
   const [localSearch, setLocalSearch] = useState(query);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setLocalSearch(query);
@@ -38,11 +43,18 @@ export default function SearchJobs({ onSearchChange }: SearchJobsProps) {
     return () => clearTimeout(handler);
   }, [localSearch, query, setSearchParams, onSearchChange]);
 
+  useEffect(() => {
+    if (showSearch) {
+      inputRef.current?.focus();
+    }
+  }, [showSearch]);
+
   return (
     <div className="mb-8">
       <div className="relative">
         <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gruvbox-fg4" />
         <input
+          ref={inputRef}
           type="text"
           placeholder="Search jobs by title, company, or skills..."
           value={localSearch}
