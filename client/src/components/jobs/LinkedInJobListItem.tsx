@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { MapPin, ChevronDown, Globe } from "lucide-react";
 import type { LinkedInJobApiResponse } from "../../types/linkedinJob";
+import { formatRelativeTime } from "../../utils/dateFormatter";
 
 export default function LinkedInJobListItem({
   job,
@@ -111,7 +112,9 @@ export default function LinkedInJobListItem({
       </button>
 
       <div className="flex items-center justify-between mt-2 pt-4 border-t border-gruvbox-bg3/50">
-        <span className="text-sm text-gruvbox-gray">Posted: {datePosted}</span>
+        <span className="text-sm text-gruvbox-gray">
+          {formatRelativeTime(datePosted)}
+        </span>
         <a
           href={job.url}
           target="_blank"

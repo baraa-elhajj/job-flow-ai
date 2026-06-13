@@ -2,9 +2,13 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { MapPin, ChevronDown, Terminal } from "lucide-react";
 import type { HnhiringJobApiResponse } from "../../types/hnhiringJob";
+import { formatRelativeTime } from "../../utils/dateFormatter";
 
-
-export default function HnhiringJobListItem({ job }: { job: HnhiringJobApiResponse }) {
+export default function HnhiringJobListItem({
+  job,
+}: {
+  job: HnhiringJobApiResponse;
+}) {
   const [showDetails, setShowDetails] = useState(false);
   const [locationOpen, setLocationOpen] = useState(true);
   const [skillsOpen, setSkillsOpen] = useState(true);
@@ -144,7 +148,7 @@ export default function HnhiringJobListItem({ job }: { job: HnhiringJobApiRespon
 
       <div className="flex items-center justify-between mt-2 pt-4 border-t border-gruvbox-bg3/50">
         <span className="text-sm text-gruvbox-gray">
-          Posted: {job.datePosted}
+          {formatRelativeTime(job.datePosted)}
         </span>
         <Link
           to={`/jobs/${job._id}`}

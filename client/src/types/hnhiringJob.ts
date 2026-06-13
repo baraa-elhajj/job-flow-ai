@@ -4,7 +4,7 @@
 export interface HnhiringJobApiResponse {
   _id: string;
   by: string;
-  datePosted: string;
+  datePosted: number | Date;
   title: string;
   text: string;
   source?: "hnhiring";

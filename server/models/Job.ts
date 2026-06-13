@@ -8,7 +8,7 @@ export interface IJob extends Document {
   // Common fields
   title: string;
   text: string;
-  datePosted: string;
+  datePosted: Date;
   source?: "hnhiring" | "linkedin";
   companyName?: string;
   url?: string | string[];
@@ -35,7 +35,7 @@ const JobSchema: Schema = new Schema(
     // Common fields
     title: { type: String, required: true },
     text: { type: String, required: true },
-    datePosted: { type: String, required: true },
+    datePosted: { type: Date, required: true },
     source: { type: String, enum: ["hnhiring", "linkedin"] },
     companyName: { type: String },
     url: { type: Schema.Types.Mixed },

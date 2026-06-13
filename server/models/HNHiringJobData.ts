@@ -1,7 +1,7 @@
 // Base interface for plain job data (used in scraping logic)
 export interface HNHiringJobData {
   by: string;
-  datePosted: string;
+  datePosted: Date;
   title: string;
   text: string;
   links: string[];

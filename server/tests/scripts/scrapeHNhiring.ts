@@ -1,24 +1,29 @@
 import "dotenv/config";
 import mongoose from "mongoose";
-import { connectDB } from '../../config/db.js';
-import { scrapeAndStoreHNHiringJobs } from '../../services/hnhiringScraper.js';
+import { connectDB } from "../../config/db.js";
+import { scrapeAndStoreHNHiringJobs } from "../../services/hnhiringScraper.js";
 
-async function runTest() {
-    try {
-        console.log("Connecting to database...");
-        await connectDB();
+async function run() {
+  try {
+    console.log("Running manual HN scrape...");
 
-        console.log("Running scrapeAndStoreHNHiringJobs('may', 2026)...");
-        await scrapeAndStoreHNHiringJobs('may', 2026);
+    console.log("Connecting to database...");
+    await connectDB();
 
-        process.exit(0);
-    } catch (error) {
-        console.error("Test failed:", error);
-        process.exit(1);
-    } finally {
-        console.log("Disconnecting from database...");
-        await mongoose.disconnect();
-    }
+    const now = new Date();
+    const month = now.toLocaleString("en-US", { month: "long" }).toLowerCase();
+    const year = now.getFullYear();
+
+    await scrapeAndStoreHNHiringJobs(month, year);
+
+    process.exit(0);
+  } catch (error) {
+    console.error("HN scrape failed:", error);
+    process.exit(1);
+  } finally {
+    console.log("Disconnecting from database...");
+    await mongoose.disconnect();
+  }
 }
 
-runTest();
+run();
