@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, MapPin, Clock, Loader2, ChevronDown } from "lucide-react";
+import { formatRelativeTime } from "../utils/dateFormatter";
 
 interface ParsedJob {
   _id: string;
   by: string;
-  datePosted: string;
+  datePosted: string | number | Date;
   title: string;
   text: string;
   links: string[];
@@ -45,15 +46,17 @@ function CollapsibleSection({
           {title}
         </p>
         <ChevronDown
-          className={`w-4 h-4 text-gruvbox-gray transition-transform duration-300 ${open ? "rotate-180" : "rotate-0"
-            }`}
+          className={`w-4 h-4 text-gruvbox-gray transition-transform duration-300 ${
+            open ? "rotate-180" : "rotate-0"
+          }`}
         />
       </button>
       <div
-        className={`grid transition-all duration-300 ease-in-out ${open
-          ? "grid-rows-[1fr] opacity-100 mt-3"
-          : "grid-rows-[0fr] opacity-0 mt-0"
-          }`}
+        className={`grid transition-all duration-300 ease-in-out ${
+          open
+            ? "grid-rows-[1fr] opacity-100 mt-3"
+            : "grid-rows-[0fr] opacity-0 mt-0"
+        }`}
       >
         <div className="overflow-hidden">{children}</div>
       </div>
@@ -206,8 +209,10 @@ export default function JobDetail() {
 
         {/* Meta info */}
         <div className="text-center text-gruvbox-gray text-sm mt-8">
-          Posted by <span className="text-gruvbox-fg4">{job.by}</span> on{" "}
-          <span className="text-gruvbox-fg4">{job.datePosted}</span>
+          Posted by <span className="text-gruvbox-fg4">{job.by}</span>{" "}
+          <span className="text-gruvbox-fg4">
+            {formatRelativeTime(job.datePosted)}
+          </span>
         </div>
       </section>
     </div>
