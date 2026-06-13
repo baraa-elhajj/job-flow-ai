@@ -87,7 +87,13 @@ export default function JobsList({
           <>
             <div className="space-y-6">
               {jobs.length > 0 ? (
-                jobs.map((job) => <JobsListItemRow key={job._id} job={job} />)
+                jobs
+                  .toSorted(
+                    (a, b) =>
+                      new Date(b.datePosted).getTime() -
+                      new Date(a.datePosted).getTime(),
+                  )
+                  .map((job) => <JobsListItemRow key={job._id} job={job} />)
               ) : (
                 <div className="job-card p-12 text-center">
                   <p className="text-gruvbox-fg4 text-lg">No jobs found.</p>
