@@ -59,10 +59,10 @@ async function writeCheckpointTitle(
   await writeFile(CHECKPOINT_FILE, `${monthYear}|${title}\n`, "utf8");
 }
 
-function parseDatePosted(raw: string): string {
+function parseDatePosted(raw: string): Date {
   const dateMatch = raw.match(/\b\d{4}-\d{2}-\d{2}\b/);
   if (dateMatch) {
-    return dateMatch[0];
+    return new Date(dateMatch[0]);
   }
 
   const relativeMatch = raw.match(
@@ -83,13 +83,12 @@ function parseDatePosted(raw: string): string {
       date.setMonth(date.getMonth() - value);
     }
 
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
+    return date;
   }
 
-  return raw.replace(/^Posted\s+/i, "").trim();
+  // Try to parse as ISO date or return current date as fallback
+  const parsed = new Date(raw.replace(/^Posted\s+/i, "").trim());
+  return isNaN(parsed.getTime()) ? new Date() : parsed;
 }
 
 function parseJobFromElement(
