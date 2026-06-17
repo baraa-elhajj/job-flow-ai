@@ -26,7 +26,7 @@ function parseDateString(dateString: string): Date {
 
   // Try to match relative date: "about X [minute|hour|day|month]s? ago"
   const relativeMatch = dateString.match(
-    /about\s+(\d+)\s+(minute|hour|day|month)s?\s+ago/i,
+    /(?:about\s+)?(\d+)\s+(minute|hour|day|month)s?\s+ago(?:.*)?/i,
   );
   if (relativeMatch && relativeMatch[1] && relativeMatch[2]) {
     const value = parseInt(relativeMatch[1], 10);

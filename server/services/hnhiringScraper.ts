@@ -66,7 +66,7 @@ function parseDatePosted(raw: string): Date {
   }
 
   const relativeMatch = raw.match(
-    /about\s+(\d+)\s+(minute|hour|day|month)s?\s+ago/i,
+    /(?:about\s+)?(\d+)\s+(minute|hour|day|month)s?\s+ago(?:.*)?/i,
   );
   if (relativeMatch) {
     const value = parseInt(relativeMatch[1]!, 10);
