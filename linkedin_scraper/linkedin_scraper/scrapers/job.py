@@ -12,10 +12,7 @@ from ..models.job import Job
 from ..core.exceptions import ProfileNotFoundError
 from ..callbacks import ProgressCallback, SilentCallback
 from .base import BaseScraper
-
-from datetime import datetime, timedelta
-import re
-from typing import Optional
+from ..core.utils import parse_date_posted
 
 logger = logging.getLogger(__name__)
 
@@ -93,7 +90,7 @@ class JobScraper(BaseScraper):
             companyName=company,
             CompanyLinkedInUrl=company_url,
             location=location,
-            datePosted=parse_posted_date(posted_date),
+            datePosted=parse_date_posted(posted_date),
             applicantCount=applicant_count,
             text=job_description,
         )
@@ -268,31 +265,4 @@ class JobScraper(BaseScraper):
                 return description.strip()
         except:
             pass
-        return None
-
-    def parse_date_posted(raw: str) -> Optional[datetime]:
-        date_match = re.search(r"\b\d{4}-\d{2}-\d{2}\b", raw)
-        if date_match:
-            return datetime.strptime(date_match.group(0), "%Y-%m-%d")
-
-        relative_match = re.search(
-            r"(\d+)\s+(minute|hour|day|month)s?\s+ago(?:.*)?",
-            raw,
-            re.IGNORECASE,
-        )
-
-        if relative_match:
-            value = int(relative_match.group(1))
-            unit = relative_match.group(2).lower()
-            now = datetime.now()
-
-            if unit == "minute":
-                return now - timedelta(minutes=value)
-            elif unit == "hour":
-                return now - timedelta(hours=value)
-            elif unit == "day":
-                return now - timedelta(days=value)
-            elif unit == "month":
-                return now - timedelta(days=value * 30)
-
         return None
