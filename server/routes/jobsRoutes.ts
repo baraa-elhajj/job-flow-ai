@@ -1,8 +1,9 @@
 import express from "express";
-import { fetchJobs } from "../controllers/jobsController.js";
+import { fetchJobById, fetchJobs } from "../controllers/jobsController.js";
 
 const router = express.Router();
 
 router.get("/", fetchJobs);
+router.get("/:id", fetchJobById);
 
 export default router;

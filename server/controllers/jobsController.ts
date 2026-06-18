@@ -1,5 +1,6 @@
 import type { Request, Response } from "express";
 import mongoose from "mongoose";
+import { Job } from "../models/Job.js";
 
 const JOBS_COLLECTION = "jobs";
 const JOB_SOURCES = ["linkedin", "hnhiring", "all"] as const;
@@ -81,13 +82,52 @@ export async function fetchJobs(req: Request, res: Response) {
       collection.countDocuments(filter),
     ]);
 
-    res.json({
+    res.status(200).json({
       success: true,
       count: jobs.length,
       total,
       page,
       totalPages: Math.ceil(total / limit) || 1,
       jobs,
+    });
+  } catch (error) {
+    console.error("Error fetching Jobs:", error);
+    res.status(500).json({
+      success: false,
+      error: String(error),
+    });
+  }
+}
+
+export async function fetchJobById(req: Request, res: Response) {
+  try {
+    const db = mongoose.connection.db;
+    if (!db) {
+      return res.status(500).json({
+        success: false,
+        error: "Database connection not established",
+      });
+    }
+
+    const jobId = req.params.id;
+    if (!jobId) {
+      return res.status(400).json({
+        success: false,
+        error: "Invalid job ID",
+      });
+    }
+
+    const job = await Job.findById(jobId);
+    if (!job) {
+      return res.status(404).json({
+        success: false,
+        error: `Job not found`,
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      job,
     });
   } catch (error) {
     console.error("Error fetching Jobs:", error);
