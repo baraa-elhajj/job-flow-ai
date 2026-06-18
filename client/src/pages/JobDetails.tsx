@@ -76,7 +76,7 @@ export default function JobDetail() {
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch(`/api/jobs/parsed/${id}`);
+        const res = await fetch(`/api/jobs/${id}`);
         const data = await res.json();
         if (data.success) {
           setJob(data.job);
