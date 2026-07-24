@@ -1,7 +1,6 @@
 import re
 import asyncio
 import os
-import random
 from datetime import datetime, timezone
 from typing import Dict, List, Optional, Set
 
@@ -50,68 +49,73 @@ def is_tech_job(job_title: str) -> bool:
     return bool(TECH_JOB_PATTERN.search(job_title.lower()))
 
 
-def _parse_proxy_lines(lines: List[str]) -> List[Dict[str, str]]:
-    """Parse Webshare lines (host:port:username:password) into Playwright configs."""
-    proxies: List[Dict[str, str]] = []
-    for line in lines:
-        line = line.strip()
-        if not line or line.startswith("#"):
-            continue
-
-        parts = line.split(":", 3)
-        if len(parts) != 4:
-            log(
-                "⚠️ Skipping invalid proxy line "
-                "(expected host:port:username:password)"
-            )
-            continue
-
-        host, port, username, password = parts
-        proxies.append(
-            {
-                "server": f"http://{host}:{port}",
-                "username": username,
-                "password": password,
-            }
-        )
-    return proxies
+WEBSHARE_IP_CHECK_URL = "https://ipv4.webshare.io/"
 
 
-def _normalize_download_url(url: str) -> str:
-    """Strip quotes/whitespace and ensure an http(s) scheme for requests."""
-    url = url.strip().strip('"').strip("'")
-    if url and not url.startswith(("http://", "https://")):
-        url = f"https://{url}"
-    return url
+def _proxy_credentials_from_env() -> Optional[tuple[str, str, str, str]]:
+    """Read Webshare proxy as host, port, username, password from env."""
+    proxy_line = os.getenv("PROXY", "").strip()
+    if proxy_line:
+        parts = proxy_line.split(":", 3)
+        if len(parts) == 4:
+            return parts[0], parts[1], parts[2], parts[3]
+        log("⚠️ PROXY must be host:port:username:password")
+        return None
+
+    log(
+        "⚠️ Proxy not configured "
+        "(set PROXY=host:port:username:password or PROXY_HOST/PORT/USERNAME/PASSWORD)"
+    )
+    return None
 
 
-def fetch_proxy_lines_from_url(url: str) -> List[str]:
-    """Download proxy list from Webshare (or any plain-text URL)."""
-    url = _normalize_download_url(url)
-    if not url.startswith(("http://", "https://")):
-        log("⚠️ PROXY_DOWNLOAD_URL must be a full http(s) URL")
-        return []
+def _requests_proxy_dict(
+    host: str, port: str, username: str, password: str
+) -> Dict[str, str]:
+    proxy_url = f"http://{username}:{password}@{host}:{port}/"
+    return {"http": proxy_url, "https": proxy_url}
+
+
+def _playwright_proxy_config(
+    host: str, port: str, username: str, password: str
+) -> Dict[str, str]:
+    return {
+        "server": f"http://{host}:{port}",
+        "username": username,
+        "password": password,
+    }
+
+
+def verify_proxy_with_webshare(
+    host: str, port: str, username: str, password: str
+) -> bool:
+    """Confirm the proxy works via Webshare's IPv4 echo endpoint."""
     try:
-        response = requests.get(url, timeout=30)
+        response = requests.get(
+            WEBSHARE_IP_CHECK_URL,
+            proxies=_requests_proxy_dict(host, port, username, password),
+            timeout=30,
+        )
         response.raise_for_status()
-        return response.text.splitlines()
+        exit_ip = response.text.strip()
+        log(f"Proxy check OK (exit IP: {exit_ip})")
+        return True
     except requests.RequestException as exc:
-        log(f"⚠️ Failed to download proxy list: {exc}")
-        return []
+        log(f"⚠️ Proxy check failed: {exc}")
+        return False
 
 
-def load_proxies() -> tuple[List[Dict[str, str]], str]:
-    """Download proxies from PROXY_DOWNLOAD_URL (fresh on each call)."""
-    download_url = _normalize_download_url(os.getenv("PROXY_DOWNLOAD_URL", ""))
-    if not download_url:
-        log("⚠️ PROXY_DOWNLOAD_URL is not set")
-        return [], "PROXY_DOWNLOAD_URL"
-
-    lines = fetch_proxy_lines_from_url(download_url)
-    proxies = _parse_proxy_lines(lines)
-    if not proxies:
-        log("⚠️ No valid proxies parsed from download")
-    return proxies, "PROXY_DOWNLOAD_URL"
+def load_verified_proxy() -> Optional[Dict[str, str]]:
+    """Load proxy from env and verify it before use."""
+    creds = _proxy_credentials_from_env()
+    if not creds:
+        return None
+    host, port, username, password = creds
+    if not verify_proxy_with_webshare(host, port, username, password):
+        return None
+    config = _playwright_proxy_config(host, port, username, password)
+    log(f"Using proxy {config['server']}")
+    return config
 
 
 def normalize_job_url(url: str) -> str:
@@ -152,16 +156,6 @@ def filter_items_not_in_db(
     return new_items, skipped_items
 
 
-def pick_random_proxy() -> Optional[Dict[str, str]]:
-    """Download proxy list from Webshare and pick one at random."""
-    proxies, source = load_proxies()
-    if not proxies:
-        log(f"⚠️ No proxies found (checked {source})")
-        return None
-    proxy = random.choice(proxies)
-    log(f"Loaded {len(proxies)} proxies from {source}")
-    log(f"Using proxy {proxy['server']}")
-    return proxy
 
 
 async def main():
@@ -177,7 +171,7 @@ async def main():
     client = MongoClient(mongo_uri)
     collection = client["test"]["Jobs"]
 
-    proxy = pick_random_proxy()
+    proxy = load_verified_proxy()
     if not proxy:
         log("Continuing without proxy")
 
