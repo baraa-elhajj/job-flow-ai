@@ -1,5 +1,6 @@
 """Pydantic models for LinkedIn Job data."""
 
+from datetime import datetime
 from typing import Optional, Dict, Any
 from pydantic import BaseModel, field_validator
 
@@ -15,7 +16,7 @@ class Job(BaseModel):
     companyName: Optional[str] = None
     CompanyLinkedInUrl: Optional[str] = None
     location: Optional[str] = None
-    datePosted: Optional[str] = None
+    datePosted: Optional[datetime] = None
     applicantCount: Optional[str] = None
     text: Optional[str] = None
     benefits: Optional[str] = None

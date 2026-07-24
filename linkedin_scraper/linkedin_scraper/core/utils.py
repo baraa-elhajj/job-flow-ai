@@ -299,7 +299,9 @@ async def is_page_loaded(page: Page) -> bool:
         return False
 
 
-def parse_date_posted(raw: str) -> Optional[datetime]:
+def parse_date_posted(raw: Optional[str]) -> Optional[datetime]:
+    if not raw:
+        return None
     date_match = re.search(r"\b\d{4}-\d{2}-\d{2}\b", raw)
     if date_match:
         return datetime.strptime(date_match.group(0), "%Y-%m-%d")
