@@ -1,16 +1,29 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { MapPin, ChevronDown, Terminal } from "lucide-react";
+import { MapPin, ChevronDown, Terminal, Check, EyeOff } from "lucide-react";
 import type { HnhiringJobApiResponse } from "../../types/hnhiringJob";
+import { formatRelativeTime } from "../../utils/dateFormatter";
+import type { JobActions } from "./JobsListItemRow";
 
-
-export default function HnhiringJobListItem({ job }: { job: HnhiringJobApiResponse }) {
+export default function HnhiringJobListItem({
+  job,
+  actions,
+}: {
+  job: HnhiringJobApiResponse;
+  actions: JobActions;
+}) {
   const [showDetails, setShowDetails] = useState(false);
   const [locationOpen, setLocationOpen] = useState(true);
   const [skillsOpen, setSkillsOpen] = useState(true);
 
   return (
-    <div className="job-card">
+    <div
+      className={`job-card transition-all duration-300 ${
+        actions.isApplied
+          ? "opacity-40 pointer-events-none hover:opacity-60 [&_a]:pointer-events-auto [&_button]:pointer-events-auto"
+          : ""
+      }`}
+    >
       <div className="flex justify-between items-start mb-4">
         <div className="flex-1">
           <div className="flex items-center mb-3">
@@ -142,16 +155,45 @@ export default function HnhiringJobListItem({ job }: { job: HnhiringJobApiRespon
         />
       </button>
 
-      <div className="flex items-center justify-between mt-2 pt-4 border-t border-gruvbox-bg3/50">
+      <div className="flex items-center justify-between mt-2 pt-4 border-t border-gruvbox-bg3/50 gap-2 flex-wrap">
         <span className="text-sm text-gruvbox-gray">
-          Posted: {job.datePosted}
+          {formatRelativeTime(job.datePosted)}
         </span>
-        <Link
-          to={`/jobs/${job._id}`}
-          className="inline-block px-6 py-2 bg-gruvbox-orange hover:bg-gruvbox-orange_light text-white rounded-lg transition font-semibold"
-        >
-          View Details
-        </Link>
+
+        <div className="flex items-center gap-2">
+          {/* Hide Button */}
+          <button
+            type="button"
+            onClick={actions.hideJob}
+            className="flex items-center gap-1.5 px-3 py-2 text-sm text-gruvbox-gray hover:text-gruvbox-fg0 bg-gruvbox-bg1 hover:bg-gruvbox-bg2 rounded-lg transition border border-gruvbox-bg3/50"
+          >
+            <EyeOff className="w-4 h-4" />
+            <span>Hide</span>
+          </button>
+
+          {/* Applied Toggle Button */}
+          <button
+            type="button"
+            onClick={actions.toggleApplied}
+            className={`flex items-center gap-1.5 px-3 py-2 text-sm rounded-lg transition border border-gruvbox-bg3/50 ${
+              actions.isApplied
+                ? "bg-gruvbox-aqua/20 text-gruvbox-aqua_light border-gruvbox-aqua/40"
+                : "bg-gruvbox-bg1 text-gruvbox-gray hover:text-gruvbox-fg0 hover:bg-gruvbox-bg2"
+            }`}
+          >
+            <Check
+              className={`w-4 h-4 transition-transform ${actions.isApplied ? "scale-110" : ""}`}
+            />
+            <span>{actions.isApplied ? "Applied" : "Mark Applied"}</span>
+          </button>
+
+          <Link
+            to={`/jobs/${job._id}`}
+            className="inline-block px-6 py-2 bg-gruvbox-orange hover:bg-gruvbox-orange_light text-white rounded-lg transition font-semibold text-sm"
+          >
+            View Details
+          </Link>
+        </div>
       </div>
     </div>
   );

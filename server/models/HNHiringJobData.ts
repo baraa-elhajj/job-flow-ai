@@ -1,13 +1,12 @@
-/**
- * Raw HN Hiring job shape from the API (parsed / Jobs collection).
- */
-export interface HnhiringJobApiResponse {
-  _id: string;
+// Base interface for plain job data (used in scraping logic)
+export interface HNHiringJobData {
   by: string;
-  datePosted: number | Date;
+  datePosted: Date;
   title: string;
   text: string;
-  source?: "hnhiring";
+  links: string[];
+  monthYear: string;
+  source: "hnhiring";
   companyName?: string;
   jobTitle?: string[];
   jobType?: string[];

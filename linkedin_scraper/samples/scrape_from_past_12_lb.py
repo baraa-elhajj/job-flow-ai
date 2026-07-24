@@ -169,7 +169,7 @@ async def main():
         return
 
     client = MongoClient(mongo_uri)
-    collection = client["test"]["Jobs"]
+    collection = client["test"]["jobs"]
 
     proxy = load_verified_proxy()
     if not proxy:
@@ -234,7 +234,7 @@ async def main():
                 job = await job_scraper.scrape(job_url)
                 jobs.append(job)
                 log(
-                    f"  Done: {job.job_title or 'N/A'} @ {job.company or 'N/A'} "
+                    f"  Done: {job.title or 'N/A'} @ {job.companyName or 'N/A'} "
                     f"({job.location or 'N/A'})"
                 )
 
@@ -243,9 +243,9 @@ async def main():
                 document["source"] = "linkedin"
 
             if documents:
-                log(f"Inserting {len(documents)} new job(s) into test.Jobs...")
+                log(f"Inserting {len(documents)} new job(s) into test.jobs...")
                 result = collection.insert_many(documents)
-                log(f"Inserted {len(result.inserted_ids)} jobs into test.Jobs")
+                log(f"Inserted {len(result.inserted_ids)} jobs into test.jobs")
             else:
                 log("No documents to insert")
     finally:

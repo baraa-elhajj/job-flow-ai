@@ -72,7 +72,7 @@ export default function JobsList({
         <div
           className={`transition-all duration-500 ease-in-out overflow-hidden ${showSearch ? "max-h-48 opacity-100" : "max-h-0 opacity-0"}`}
         >
-          <SearchJobs />
+          <SearchJobs showSearch={showSearch} />
         </div>
 
         {loading ? (
@@ -87,7 +87,13 @@ export default function JobsList({
           <>
             <div className="space-y-6">
               {jobs.length > 0 ? (
-                jobs.map((job) => <JobsListItemRow key={job._id} job={job} />)
+                jobs
+                  .toSorted(
+                    (a, b) =>
+                      new Date(b.datePosted).getTime() -
+                      new Date(a.datePosted).getTime(),
+                  )
+                  .map((job) => <JobsListItemRow key={job._id} job={job} />)
               ) : (
                 <div className="job-card p-12 text-center">
                   <p className="text-gruvbox-fg4 text-lg">No jobs found.</p>

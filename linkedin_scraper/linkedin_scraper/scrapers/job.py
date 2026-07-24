@@ -12,6 +12,7 @@ from ..models.job import Job
 from ..core.exceptions import ProfileNotFoundError
 from ..callbacks import ProgressCallback, SilentCallback
 from .base import BaseScraper
+from ..core.utils import parse_date_posted
 
 logger = logging.getLogger(__name__)
 
@@ -84,14 +85,14 @@ class JobScraper(BaseScraper):
 
         # Create job object
         job = Job(
-            linkedin_url=linkedin_url,
-            job_title=job_title,
-            company=company,
-            company_linkedin_url=company_url,
+            url=linkedin_url,
+            title=job_title,
+            companyName=company,
+            CompanyLinkedInUrl=company_url,
             location=location,
-            posted_date=posted_date,
-            applicant_count=applicant_count,
-            job_description=job_description,
+            datePosted=parse_date_posted(posted_date),
+            applicantCount=applicant_count,
+            text=job_description,
         )
 
         await self.callback.on_progress("Scraping complete", 100)
