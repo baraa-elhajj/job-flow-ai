@@ -115,7 +115,7 @@ The workflow [`.github/workflows/linkedin-scraper.yml`](.github/workflows/linked
 Required GitHub secrets:
 
 - `MONGODB_URI`
-- `PROXY_DOWNLOAD_URL` — Webshare proxy list download URL (fetched on each run; `username/direct` format returns `host:port:username:password` per line)
+- `PROXY` — Webshare proxy as `host:port:username:password` (verified via `https://ipv4.webshare.io/` before scraping). Alternatively set `PROXY_HOST`, `PROXY_PORT`, `PROXY_USERNAME`, and `PROXY_PASSWORD`.
 
 ### Manual scraper scripts
 

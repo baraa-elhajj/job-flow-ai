@@ -48,6 +48,6 @@ jobs:
       - name: Run Lebanon job scraper
         env:
           MONGODB_URI: ${{ secrets.MONGODB_URI }}
-          PROXY_DOWNLOAD_URL: ${{ secrets.PROXY_DOWNLOAD_URL }}
+          PROXY: ${{ secrets.PROXY }}
           PYTHONPATH: ${{ github.workspace }}/linkedin_scraper
         run: python linkedin_scraper/samples/scrape_from_past_12_lb.py
