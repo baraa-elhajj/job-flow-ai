@@ -9,6 +9,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set
 
+from bson import ObjectId
+
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS jobs (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -46,6 +48,8 @@ def _serialize_job(document: Dict[str, Any]) -> str:
     def default(value: Any) -> Any:
         if isinstance(value, datetime):
             return value.isoformat()
+        if isinstance(value, ObjectId):
+            return str(value)
         raise TypeError(f"Object of type {type(value)!r} is not JSON serializable")
 
     return json.dumps(document, default=default)
