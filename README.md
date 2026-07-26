@@ -119,7 +119,8 @@ The workflow [`.github/workflows/bayt-scraper.yml`](.github/workflows/bayt-scrap
 Required GitHub secrets (shared with LinkedIn scraper):
 
 - `MONGODB_URI`
-- `PROXY` — Webshare proxy as `host:port:username:password`; verified before scraping and sent to Byparr on each request via `X-Proxy-*` headers
+- `PROXY` — Webshare proxy as `host:port:username:password`; verified before scraping
+- `PROXY_LIST` — optional fallback proxies (`host:port:user:pass` separated by `|` or newlines); LinkedIn scraper rotates on failure
 
 Optional env vars for local or CI runs:
 
