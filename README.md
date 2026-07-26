@@ -1,12 +1,12 @@
 # JobFlow AI
 
-JobFlow AI aggregates high-signal tech job postings from **LinkedIn** and **Hacker News Hiring**, stores them in MongoDB, and presents them in a searchable web UI with light/dark themes.
+JobFlow AI aggregates high-signal tech job postings from **LinkedIn**, **Bayt.com**, and **Hacker News Hiring**, stores them in MongoDB, and presents them in a searchable web UI with light/dark themes.
 
 ## Features
 
-- **Unified job feed** — browse all jobs or filter by source (LinkedIn / HN Hiring)
+- **Unified job feed** — browse all jobs or filter by source (LinkedIn / Bayt / HN Hiring)
 - **Job details** — full descriptions and parsed metadata for HN Hiring posts
-- **Automated ingestion** — scheduled scrapers on the server; LinkedIn Lebanon jobs via GitHub Actions
+- **Automated ingestion** — scheduled scrapers on the server; LinkedIn and Bayt jobs via GitHub Actions
 - **Gruvbox UI** — responsive React app with light and dark mode
 - **Pagination** — paginated job lists with URL-based page state
 
@@ -26,8 +26,8 @@ JobFlow AI aggregates high-signal tech job postings from **LinkedIn** and **Hack
 job-flow-ai/
 ├── client/                 # React frontend (port 5173)
 ├── server/                 # Express API (port 4000)
-├── linkedin_scraper/       # Python LinkedIn scraper (CI / manual runs)
-└── .github/workflows/      # Scheduled LinkedIn scrape workflow
+├── linkedin_scraper/       # Python scrapers (LinkedIn + Bayt; CI / manual runs)
+└── .github/workflows/      # Scheduled LinkedIn and Bayt scrape workflows
 ```
 
 ## Prerequisites
@@ -90,7 +90,7 @@ The Vite dev server proxies `/api` requests to the backend.
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | `GET` | `/api/health` | Health check |
-| `GET` | `/api/jobs?src=&page=&limit=` | List jobs (`src`: `all`, `linkedin`, or `hnhiring`) |
+| `GET` | `/api/jobs?src=&page=&limit=` | List jobs (`src`: `all`, `linkedin`, `bayt`, or `hnhiring`) |
 | `GET` | `/api/jobs/parsed/:id` | Single parsed HN Hiring job by ID |
 
 ## Scrapers
@@ -112,10 +112,20 @@ A TypeScript LinkedIn scraper is wired in the scheduler but **currently disabled
 
 The workflow [`.github/workflows/linkedin-scraper.yml`](.github/workflows/linkedin-scraper.yml) runs every 12 hours and executes the Python scraper for Lebanon-based software engineer roles.
 
-Required GitHub secrets:
+### Bayt.com (GitHub Actions)
+
+The workflow [`.github/workflows/bayt-scraper.yml`](.github/workflows/bayt-scraper.yml) runs every 24 hours and scrapes international Bayt.com jobs posted in the last 24 hours via **[Byparr](https://github.com/ThePhaseless/Byparr)** (FlareSolverr-compatible API). Tech titles are filtered before detail scraping; results are stored in MongoDB and SQLite.
+
+Required GitHub secrets (shared with LinkedIn scraper):
 
 - `MONGODB_URI`
-- `PROXY` — Webshare proxy as `host:port:username:password` (verified via `https://ipv4.webshare.io/` before scraping). Alternatively set `PROXY_HOST`, `PROXY_PORT`, `PROXY_USERNAME`, and `PROXY_PASSWORD`.
+- `PROXY` — Webshare proxy as `host:port:username:password`; verified before scraping and sent to Byparr on each request via `X-Proxy-*` headers
+
+Optional env vars for local or CI runs:
+
+- `SCRAPE_LIMIT` — max jobs to collect per run (default: `50`)
+- `BYPARR_URL` — Byparr API base URL (default: `http://localhost:8191`)
+- `BYPARR_TIMEOUT_MS` — per-request timeout in ms (default: `120000`)
 
 ### Manual scraper scripts
 
@@ -130,6 +140,11 @@ npx tsx tests/scripts/scrapeLinkedIn.ts
 cd linkedin_scraper && pip install -r requirements.txt
 playwright install chromium
 python samples/scrape_from_past_12_lb.py
+
+# Python Bayt sample (from repo root; requires Byparr on localhost:8191)
+docker run -p 8191:8191 ghcr.io/thephaseless/byparr:latest
+cd linkedin_scraper && pip install -r requirements.txt
+python -m samples.scrape_bayt_past_24h
 ```
 
 ## Production build
@@ -155,6 +170,7 @@ Set `NODE_ENV=production` on the server and use a strong `JWT_SECRET` if auth is
 | `/` | All jobs |
 | `/linkedin` | LinkedIn jobs only |
 | `/hnhiring` | HN Hiring jobs only |
+| `/bayt` | Bayt.com jobs only |
 | `/jobs/:id` | Job detail (HN parsed jobs) |
 | `/login` | Sign-in page |
 

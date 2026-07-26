@@ -27,6 +27,7 @@ export default function Home({ source }: { source: string }) {
                 { id: "all", label: "All", path: "/" },
                 { id: "hnhiring", label: "HN Hiring", path: "/hnhiring" },
                 { id: "linkedin", label: "LinkedIn", path: "/linkedin" },
+                { id: "bayt", label: "Bayt", path: "/bayt" },
               ].map((filter) => (
                 <button
                   key={filter.id}

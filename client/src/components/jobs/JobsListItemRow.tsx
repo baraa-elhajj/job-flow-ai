@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import type { JobsListItem } from "../../types/job";
 import {
+  isBaytJobApiResponse,
   isHnhiringJobApiResponse,
   isLinkedInJobApiResponse,
 } from "../../types/job";
+import BaytJobListItem from "./BaytJobListItem";
 import HnhiringJobListItem from "./HnhiringJobListItem";
 import LinkedInJobListItem from "./LinkedInJobListItem";
 
@@ -75,6 +77,9 @@ export default function JobsListItemRow({ job }: { job: JobsListItem }) {
   }
   if (isLinkedInJobApiResponse(job)) {
     return <LinkedInJobListItem job={job} actions={clientActions} />;
+  }
+  if (isBaytJobApiResponse(job)) {
+    return <BaytJobListItem job={job} actions={clientActions} />;
   }
   return null;
 }

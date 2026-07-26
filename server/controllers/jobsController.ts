@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 import { Job } from "../models/Job.js";
 
 const JOBS_COLLECTION = "jobs";
-const JOB_SOURCES = ["linkedin", "hnhiring", "all"] as const;
+const JOB_SOURCES = ["linkedin", "hnhiring", "bayt", "all"] as const;
 type JobSource = (typeof JOB_SOURCES)[number];
 
 function parseJobSourceQuery(raw: unknown): JobSource | null {
@@ -25,7 +25,7 @@ function parseJobSourceQuery(raw: unknown): JobSource | null {
 
 /**
  * GET /api/jobs?page=&limit=&source=&q=
- * Unified `jobs` collection. Optional `source`: `linkedin` | `hnhiring` (omit for all).
+ * Unified `jobs` collection. Optional `source`: `linkedin` | `hnhiring` | `bayt` (omit for all).
  * Optional `q`: search query to filter by title, company, and description.
  */
 export async function fetchJobs(req: Request, res: Response) {

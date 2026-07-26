@@ -3,6 +3,7 @@ import * as cheerio from "cheerio";
 import { mkdir, readFile, writeFile } from "fs/promises";
 import path from "path";
 import { fileURLToPath } from "url";
+import { getSqliteDbPath, insertJobsIntoSqlite } from "../config/sqlite.js";
 import type { HNHiringJobData } from "../models/HNHiringJobData.js";
 import { Job } from "../models/Job.js";
 
@@ -242,6 +243,18 @@ export async function scrapeAndStoreHNHiringJobs(month: string, year: number) {
     if (jobs.length > 0) {
       await Job.insertMany(jobs);
       console.log(`Successfully inserted ${jobs.length} jobs into MongoDB.`);
+
+      const sqlitePath = getSqliteDbPath();
+      if (sqlitePath) {
+        const sqliteCount = insertJobsIntoSqlite(
+          jobs as unknown as Record<string, unknown>[],
+        );
+        console.log(
+          `Successfully inserted ${sqliteCount} jobs into SQLite (${sqlitePath}).`,
+        );
+      } else {
+        console.log("SQLITE_DB_PATH not set; skipping SQLite storage.");
+      }
     } else {
       console.log("No new jobs found to store.");
     }

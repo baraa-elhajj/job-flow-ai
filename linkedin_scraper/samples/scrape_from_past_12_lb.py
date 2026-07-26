@@ -1,18 +1,26 @@
-import re
 import asyncio
 import os
 from datetime import datetime, timezone
-from typing import Dict, List, Optional, Set
+from pathlib import Path
+from typing import List, Set
 
 from dotenv import load_dotenv
 from pymongo import MongoClient
-import requests
 
 from linkedin_scraper.scrapers.job_search import JobSearchScraper
 from linkedin_scraper.scrapers.job import JobScraper
 from linkedin_scraper.core.browser import BrowserManager
+from linkedin_scraper.core.proxy import load_verified_proxy
+from linkedin_scraper.filters.tech import is_tech_job
+from linkedin_scraper.storage.sqlite_store import (
+    get_existing_job_urls as get_existing_sqlite_job_urls,
+    get_sqlite_db_path,
+    insert_jobs_into_sqlite,
+)
 
 
+_repo_root = Path(__file__).resolve().parents[2]
+load_dotenv(_repo_root / "server" / ".env")
 load_dotenv()
 
 
@@ -21,101 +29,6 @@ def log(message: str) -> None:
     print(f"[{timestamp}] {message}", flush=True)
 
 url = "https://www.linkedin.com/jobs/search?keywords=&location=Lebanon&geoId=101834488&f_TPR=r43200&position=1&pageNum=0"
-
-
-TECH_JOB_PATTERN = re.compile(
-    r"\b(engineer|developer|programmer|architect|analyst|technician|"
-    r"devops|sre|qa|tester|scrum|agile|backend|frontend|fullstack|"
-    r"data|machine learning|ai|artificial intelligence|cloud|network|security|"
-    r"cybersecurity|it|tech|software|hardware|ui|ux|web|mobile|ios|android|"
-    r"systems|database|admin|administrator|designer|web3|blockchain|data scientist|"
-    r"data analyst|data engineer|system administrator|web)\b",
-    re.IGNORECASE,
-)
-
-
-def is_tech_job(job_title: str) -> bool:
-    """
-    Checks if a given job title is related to a tech job.
-
-    Args:
-        job_title (str): The job title to check.
-
-    Returns:
-        bool: True if the title matches the tech job regex, False otherwise.
-    """
-    if not job_title:
-        return False
-    return bool(TECH_JOB_PATTERN.search(job_title.lower()))
-
-
-WEBSHARE_IP_CHECK_URL = "https://ipv4.webshare.io/"
-
-
-def _proxy_credentials_from_env() -> Optional[tuple[str, str, str, str]]:
-    """Read Webshare proxy as host, port, username, password from env."""
-    proxy_line = os.getenv("PROXY", "").strip()
-    if proxy_line:
-        parts = proxy_line.split(":", 3)
-        if len(parts) == 4:
-            return parts[0], parts[1], parts[2], parts[3]
-        log("⚠️ PROXY must be host:port:username:password")
-        return None
-
-    log(
-        "⚠️ Proxy not configured "
-        "(set PROXY=host:port:username:password or PROXY_HOST/PORT/USERNAME/PASSWORD)"
-    )
-    return None
-
-
-def _requests_proxy_dict(
-    host: str, port: str, username: str, password: str
-) -> Dict[str, str]:
-    proxy_url = f"http://{username}:{password}@{host}:{port}/"
-    return {"http": proxy_url, "https": proxy_url}
-
-
-def _playwright_proxy_config(
-    host: str, port: str, username: str, password: str
-) -> Dict[str, str]:
-    return {
-        "server": f"http://{host}:{port}",
-        "username": username,
-        "password": password,
-    }
-
-
-def verify_proxy_with_webshare(
-    host: str, port: str, username: str, password: str
-) -> bool:
-    """Confirm the proxy works via Webshare's IPv4 echo endpoint."""
-    try:
-        response = requests.get(
-            WEBSHARE_IP_CHECK_URL,
-            proxies=_requests_proxy_dict(host, port, username, password),
-            timeout=30,
-        )
-        response.raise_for_status()
-        exit_ip = response.text.strip()
-        log(f"Proxy check OK (exit IP: {exit_ip})")
-        return True
-    except requests.RequestException as exc:
-        log(f"⚠️ Proxy check failed: {exc}")
-        return False
-
-
-def load_verified_proxy() -> Optional[Dict[str, str]]:
-    """Load proxy from env and verify it before use."""
-    creds = _proxy_credentials_from_env()
-    if not creds:
-        return None
-    host, port, username, password = creds
-    if not verify_proxy_with_webshare(host, port, username, password):
-        return None
-    config = _playwright_proxy_config(host, port, username, password)
-    log(f"Using proxy {config['server']}")
-    return config
 
 
 def normalize_job_url(url: str) -> str:
@@ -170,8 +83,13 @@ async def main():
 
     client = MongoClient(mongo_uri)
     collection = client["test"]["jobs"]
+    sqlite_path = get_sqlite_db_path()
+    if sqlite_path:
+        log(f"SQLite storage enabled: {sqlite_path}")
+    else:
+        log("SQLITE_DB_PATH not set; skipping SQLite storage")
 
-    proxy = load_verified_proxy()
+    proxy = load_verified_proxy(log=log)
     if not proxy:
         log("Continuing without proxy")
 
@@ -189,6 +107,13 @@ async def main():
 
             search_urls = [item["url"] for item in items]
             existing_urls = get_existing_job_urls(collection, search_urls)
+            if sqlite_path:
+                normalized_search_urls = [
+                    normalize_job_url(url) for url in search_urls
+                ]
+                existing_urls |= get_existing_sqlite_job_urls(
+                    sqlite_path, normalized_search_urls
+                )
             new_items, skipped_items = filter_items_not_in_db(items, existing_urls)
 
             if skipped_items:
@@ -246,6 +171,10 @@ async def main():
                 log(f"Inserting {len(documents)} new job(s) into test.jobs...")
                 result = collection.insert_many(documents)
                 log(f"Inserted {len(result.inserted_ids)} jobs into test.jobs")
+
+                if sqlite_path:
+                    sqlite_count = insert_jobs_into_sqlite(sqlite_path, documents)
+                    log(f"Inserted {sqlite_count} jobs into SQLite ({sqlite_path})")
             else:
                 log("No documents to insert")
     finally:

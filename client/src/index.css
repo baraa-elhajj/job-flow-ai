@@ -199,4 +199,17 @@ body {
     color: rgb(var(--color-orange_light));
     border-color: rgb(var(--color-orange) / 0.35);
   }
+
+  .badge-bayt {
+    @apply badge-source;
+    background-color: rgb(var(--color-green) / 0.14);
+    color: rgb(var(--color-green_light));
+    border-color: rgb(var(--color-green) / 0.28);
+  }
+
+  .dark .badge-bayt {
+    background-color: rgb(var(--color-green) / 0.22);
+    color: rgb(var(--color-green_light));
+    border-color: rgb(var(--color-green) / 0.35);
+  }
 }

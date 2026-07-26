@@ -9,7 +9,7 @@ export interface IJob extends Document {
   title: string;
   text: string;
   datePosted: Date;
-  source?: "hnhiring" | "linkedin";
+  source?: "hnhiring" | "linkedin" | "bayt";
   companyName?: string;
   url?: string | string[];
 
@@ -36,7 +36,7 @@ const JobSchema: Schema = new Schema(
     title: { type: String, required: true },
     text: { type: String, required: true },
     datePosted: { type: Date, required: true },
-    source: { type: String, enum: ["hnhiring", "linkedin"] },
+    source: { type: String, enum: ["hnhiring", "linkedin", "bayt"] },
     companyName: { type: String },
     url: { type: Schema.Types.Mixed },
 
