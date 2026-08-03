@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { MapPin, ChevronDown, Globe, Check, EyeOff } from "lucide-react";
+import { MapPin, ChevronDown, Globe, Check, Eye, EyeOff } from "lucide-react";
 import type { LinkedInJobApiResponse } from "../../types/linkedinJob";
 import { formatRelativeTime } from "../../utils/dateFormatter";
 import type { JobActions } from "./JobsListItemRow";
@@ -132,8 +132,12 @@ export default function LinkedInJobListItem({
             onClick={actions.hideJob}
             className="flex items-center gap-1.5 px-3 py-2 text-sm text-gruvbox-gray hover:text-gruvbox-fg0 bg-gruvbox-bg1 hover:bg-gruvbox-bg2 rounded-lg transition border border-gruvbox-bg3/50"
           >
-            <EyeOff className="w-4 h-4" />
-            <span>Hide</span>
+            {actions.isHidden ? (
+              <Eye className="w-4 h-4" />
+            ) : (
+              <EyeOff className="w-4 h-4" />
+            )}
+            <span>{actions.isHidden ? "Restore" : "Hide"}</span>
           </button>
 
           {/* Applied Toggle Button */}

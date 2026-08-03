@@ -3,14 +3,14 @@
 import asyncio
 import functools
 import logging
-from typing import Any, Callable, Optional, TypeVar, cast
+import re
+from collections.abc import Callable
+from datetime import datetime, timedelta, timezone
+from typing import Any, Optional, TypeVar
+
 from playwright.async_api import Page, TimeoutError as PlaywrightTimeoutError
 
-from .exceptions import RateLimitError, ElementNotFoundError, NetworkError
-
-from datetime import datetime, timedelta
-import re
-from typing import Optional
+from .exceptions import ElementNotFoundError, RateLimitError
 
 logger = logging.getLogger(__name__)
 
@@ -302,28 +302,48 @@ async def is_page_loaded(page: Page) -> bool:
 def parse_date_posted(raw: Optional[str]) -> Optional[datetime]:
     if not raw:
         return None
-    date_match = re.search(r"\b\d{4}-\d{2}-\d{2}\b", raw)
-    if date_match:
-        return datetime.strptime(date_match.group(0), "%Y-%m-%d")
+
+    value = raw.strip()
+
+    # LinkedIn exposes an exact ISO value in JSON-LD and <time datetime="...">.
+    iso_match = re.search(
+        r"\b\d{4}-\d{2}-\d{2}(?:[Tt][0-9:.]+(?:[Zz]|[+-]\d{2}:?\d{2})?)?",
+        value,
+    )
+    if iso_match:
+        iso_value = iso_match.group(0)
+        if "T" not in iso_value.upper():
+            return datetime.strptime(iso_value, "%Y-%m-%d").replace(
+                tzinfo=timezone.utc
+            )
+        try:
+            return datetime.fromisoformat(iso_value.replace("Z", "+00:00"))
+        except ValueError:
+            pass
+
+    if re.search(r"\b(?:just now|moments? ago)\b", value, re.IGNORECASE):
+        return datetime.now(timezone.utc)
 
     relative_match = re.search(
-        r"(\d+)\s+(minute|hour|day|month)s?\s+ago(?:.*)?",
-        raw,
+        r"(\d+)\s+(minute|hour|day|week|month)s?\s+ago\b",
+        value,
         re.IGNORECASE,
     )
 
     if relative_match:
-        value = int(relative_match.group(1))
+        amount = int(relative_match.group(1))
         unit = relative_match.group(2).lower()
-        now = datetime.now()
+        now = datetime.now(timezone.utc)
 
         if unit == "minute":
-            return now - timedelta(minutes=value)
+            return now - timedelta(minutes=amount)
         elif unit == "hour":
-            return now - timedelta(hours=value)
+            return now - timedelta(hours=amount)
         elif unit == "day":
-            return now - timedelta(days=value)
+            return now - timedelta(days=amount)
+        elif unit == "week":
+            return now - timedelta(weeks=amount)
         elif unit == "month":
-            return now - timedelta(days=value * 30)
+            return now - timedelta(days=amount * 30)
 
     return None

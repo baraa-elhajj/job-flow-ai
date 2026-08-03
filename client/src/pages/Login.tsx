@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { useAuth } from "../context/authContext";
 import GoogleSignInButton from "../components/GoogleSignInButton";
@@ -7,14 +7,17 @@ import GoogleSignInButton from "../components/GoogleSignInButton";
 export default function Login() {
   const { loginWithGoogle, user, loading } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const destination =
+    (location.state as { from?: string } | null)?.from ?? "/";
   const [error, setError] = useState<string | null>(null);
   const [signingIn, setSigningIn] = useState(false);
 
   useEffect(() => {
     if (!loading && user) {
-      navigate("/", { replace: true });
+      navigate(destination, { replace: true });
     }
-  }, [loading, user, navigate]);
+  }, [destination, loading, user, navigate]);
 
   const handleGoogleSuccess = async (credentialResponse: {
     credential?: string;
@@ -28,7 +31,7 @@ export default function Login() {
     setError(null);
     try {
       await loginWithGoogle(credentialResponse.credential);
-      navigate("/", { replace: true });
+      navigate(destination, { replace: true });
     } catch (e) {
       setError(e instanceof Error ? e.message : "Sign-in failed");
     } finally {
@@ -65,15 +68,6 @@ export default function Login() {
             {error && (
               <p className="text-sm text-gruvbox-red text-center">{error}</p>
             )}
-          </div>
-
-          <div className="flex justify-center mt-8 pt-6 border-t border-gruvbox-bg3">
-            <Link
-              to="/"
-              className="text-sm text-gruvbox-orange_light hover:text-gruvbox-orange font-semibold text-center"
-            >
-              ← Back to Home
-            </Link>
           </div>
         </div>
       </div>

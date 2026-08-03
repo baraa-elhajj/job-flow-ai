@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import List, Set
 
 from dotenv import load_dotenv
-from pymongo import MongoClient
+# from pymongo import MongoClient
 
 from linkedin_scraper.core.bayt_browser import get_bayt_search_url
 from linkedin_scraper.core.byparr_client import ByparrClient, ByparrError
@@ -45,24 +45,25 @@ def wait_for_byparr(client: ByparrClient, attempts: int = 30) -> bool:
     return False
 
 
-def get_existing_job_urls(collection, urls: List[str]) -> Set[str]:
-    if not urls:
-        return set()
-
-    normalized = {normalize_bayt_job_url(url) for url in urls}
-    variants = set(urls) | normalized
-    existing: Set[str] = set()
-
-    for doc in collection.find({"url": {"$in": list(variants)}}, {"url": 1}):
-        url = doc.get("url")
-        if isinstance(url, str):
-            existing.add(normalize_bayt_job_url(url))
-        elif isinstance(url, list):
-            for item in url:
-                if isinstance(item, str):
-                    existing.add(normalize_bayt_job_url(item))
-
-    return existing
+# MongoDB dedup (commented out — SQLite is now the primary database):
+# def get_existing_job_urls(collection, urls: List[str]) -> Set[str]:
+#     if not urls:
+#         return set()
+#
+#     normalized = {normalize_bayt_job_url(url) for url in urls}
+#     variants = set(urls) | normalized
+#     existing: Set[str] = set()
+#
+#     for doc in collection.find({"url": {"$in": list(variants)}}, {"url": 1}):
+#         url = doc.get("url")
+#         if isinstance(url, str):
+#             existing.add(normalize_bayt_job_url(url))
+#         elif isinstance(url, list):
+#             for item in url:
+#                 if isinstance(item, str):
+#                     existing.add(normalize_bayt_job_url(item))
+#
+#     return existing
 
 
 def filter_items_not_in_db(
@@ -84,18 +85,16 @@ def main() -> None:
     log(f"Scrape limit: {SCRAPE_LIMIT}")
     log(f"Byparr URL: {BYPARR_URL}")
 
-    mongo_uri = os.getenv("MONGODB_URI")
-    if not mongo_uri:
-        log("MONGODB_URI not found in environment")
-        sys.exit(1)
-
-    client = MongoClient(mongo_uri)
-    collection = client["test"]["jobs"]
     sqlite_path = get_sqlite_db_path()
-    if sqlite_path:
-        log(f"SQLite storage enabled: {sqlite_path}")
-    else:
-        log("SQLITE_DB_PATH not set; skipping SQLite storage")
+    log(f"SQLite storage: {sqlite_path}")
+
+    # MongoDB connection (commented out):
+    # mongo_uri = os.getenv("MONGODB_URI")
+    # if not mongo_uri:
+    #     log("MONGODB_URI not found in environment")
+    #     sys.exit(1)
+    # client = MongoClient(mongo_uri)
+    # collection = client["test"]["jobs"]
 
     proxy_headers = load_verified_byparr_proxy_headers(log=log)
     if not proxy_headers:
@@ -111,7 +110,6 @@ def main() -> None:
             f"Byparr is not reachable at {BYPARR_URL}. "
             "Start it with: docker run -p 8191:8191 ghcr.io/thephaseless/byparr:latest"
         )
-        client.close()
         sys.exit(1)
 
     try:
@@ -125,19 +123,16 @@ def main() -> None:
                 "Check Byparr logs: docker logs byparr "
                 "(browser launch / proxy / shm issues are common causes of HTTP 500)"
             )
-            client.close()
             sys.exit(1)
         log(f"Found {len(items)} job listings from search")
 
         search_urls = [item["url"] for item in items]
-        existing_urls = get_existing_job_urls(collection, search_urls)
-        if sqlite_path:
-            normalized_search_urls = [
-                normalize_bayt_job_url(url) for url in search_urls
-            ]
-            existing_urls |= get_existing_sqlite_job_urls(
-                sqlite_path, normalized_search_urls
-            )
+        normalized_search_urls = [
+            normalize_bayt_job_url(url) for url in search_urls
+        ]
+        existing_urls = get_existing_sqlite_job_urls(
+            sqlite_path, normalized_search_urls
+        )
         new_items, skipped_items = filter_items_not_in_db(items, existing_urls)
 
         if skipped_items:
@@ -203,17 +198,18 @@ def main() -> None:
             document["source"] = "bayt"
 
         if documents:
-            log(f"Inserting {len(documents)} new job(s) into test.jobs...")
-            result = collection.insert_many(documents)
-            log(f"Inserted {len(result.inserted_ids)} jobs into test.jobs")
+            log(f"Inserting {len(documents)} new job(s) into SQLite...")
+            sqlite_count = insert_jobs_into_sqlite(sqlite_path, documents)
+            log(f"Inserted {sqlite_count} jobs into SQLite ({sqlite_path})")
 
-            if sqlite_path:
-                sqlite_count = insert_jobs_into_sqlite(sqlite_path, documents)
-                log(f"Inserted {sqlite_count} jobs into SQLite ({sqlite_path})")
+            # MongoDB insert (commented out):
+            # result = collection.insert_many(documents)
+            # log(f"Inserted {len(result.inserted_ids)} jobs into test.jobs")
         else:
             log("No documents to insert")
     finally:
-        client.close()
+        pass
+        # client.close()
 
     log("Scraper finished successfully")
 

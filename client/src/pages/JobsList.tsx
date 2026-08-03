@@ -20,6 +20,8 @@ export default function JobsList({
   const [searchParams, setSearchParams] = useSearchParams();
   const page = parseInt(searchParams.get("page") || "1", 10);
   const query = searchParams.get("q") || "";
+  const postedAfter = searchParams.get("after") || "";
+  const postedBefore = searchParams.get("before") || "";
   const [totalPages, setTotalPages] = useState<number>(1);
 
   useEffect(() => {
@@ -34,6 +36,8 @@ export default function JobsList({
         params.set("limit", "20");
 
         if (query) params.set("q", query);
+        if (postedAfter) params.set("after", postedAfter);
+        if (postedBefore) params.set("before", postedBefore);
 
         const res = await fetch(`${endpoint}&${params.toString()}`);
         const data = await res.json();
@@ -50,7 +54,7 @@ export default function JobsList({
       }
     }
     fetchJobs();
-  }, [page, source, query]);
+  }, [page, source, query, postedAfter, postedBefore]);
 
   useEffect(() => {
     window.scrollTo({
@@ -70,7 +74,7 @@ export default function JobsList({
     <div className="min-h-screen bg-gruvbox-bg">
       <section className="max-w-6xl mx-auto px-6 pb-12">
         <div
-          className={`transition-all duration-500 ease-in-out overflow-hidden ${showSearch ? "max-h-48 opacity-100" : "max-h-0 opacity-0"}`}
+          className={`transition-all duration-500 ease-in-out overflow-hidden ${showSearch ? "max-h-80 opacity-100" : "max-h-0 opacity-0"}`}
         >
           <SearchJobs showSearch={showSearch} />
         </div>
@@ -90,8 +94,8 @@ export default function JobsList({
                 jobs
                   .toSorted(
                     (a, b) =>
-                      new Date(b.datePosted).getTime() -
-                      new Date(a.datePosted).getTime(),
+                      new Date(b.datePosted ?? 0).getTime() -
+                      new Date(a.datePosted ?? 0).getTime(),
                   )
                   .map((job) => <JobsListItemRow key={job._id} job={job} />)
               ) : (

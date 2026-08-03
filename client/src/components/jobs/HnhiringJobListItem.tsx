@@ -1,6 +1,13 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { MapPin, ChevronDown, Terminal, Check, EyeOff } from "lucide-react";
+import {
+  MapPin,
+  ChevronDown,
+  Terminal,
+  Check,
+  Eye,
+  EyeOff,
+} from "lucide-react";
 import type { HnhiringJobApiResponse } from "../../types/hnhiringJob";
 import { formatRelativeTime } from "../../utils/dateFormatter";
 import type { JobActions } from "./JobsListItemRow";
@@ -167,8 +174,12 @@ export default function HnhiringJobListItem({
             onClick={actions.hideJob}
             className="flex items-center gap-1.5 px-3 py-2 text-sm text-gruvbox-gray hover:text-gruvbox-fg0 bg-gruvbox-bg1 hover:bg-gruvbox-bg2 rounded-lg transition border border-gruvbox-bg3/50"
           >
-            <EyeOff className="w-4 h-4" />
-            <span>Hide</span>
+            {actions.isHidden ? (
+              <Eye className="w-4 h-4" />
+            ) : (
+              <EyeOff className="w-4 h-4" />
+            )}
+            <span>{actions.isHidden ? "Restore" : "Hide"}</span>
           </button>
 
           {/* Applied Toggle Button */}

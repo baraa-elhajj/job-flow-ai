@@ -7,9 +7,9 @@ import os
 import sqlite3
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Dict, List, Set
 
-from bson import ObjectId
+DEFAULT_DB_PATH = "./data/jobs.db"
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS jobs (
@@ -27,9 +27,9 @@ CREATE INDEX IF NOT EXISTS idx_jobs_url ON jobs(url);
 """
 
 
-def get_sqlite_db_path() -> Optional[str]:
+def get_sqlite_db_path() -> str:
     configured = os.getenv("SQLITE_DB_PATH", "").strip()
-    return configured or None
+    return configured or DEFAULT_DB_PATH
 
 
 def _ensure_db_dir(db_path: Path) -> None:
@@ -48,14 +48,12 @@ def _serialize_job(document: Dict[str, Any]) -> str:
     def default(value: Any) -> Any:
         if isinstance(value, datetime):
             return value.isoformat()
-        if isinstance(value, ObjectId):
-            return str(value)
-        raise TypeError(f"Object of type {type(value)!r} is not JSON serializable")
+        return str(value)
 
     return json.dumps(document, default=default)
 
 
-def _extract_url(document: Dict[str, Any]) -> Optional[str]:
+def _extract_url(document: Dict[str, Any]) -> str | None:
     url = document.get("url") or document.get("linkedin_url")
     if isinstance(url, str):
         return url
@@ -64,12 +62,12 @@ def _extract_url(document: Dict[str, Any]) -> Optional[str]:
     return None
 
 
-def _extract_title(document: Dict[str, Any]) -> Optional[str]:
+def _extract_title(document: Dict[str, Any]) -> str | None:
     title = document.get("title")
     return title if isinstance(title, str) else None
 
 
-def _extract_date_posted(document: Dict[str, Any]) -> Optional[str]:
+def _extract_date_posted(document: Dict[str, Any]) -> str | None:
     date_posted = document.get("datePosted") or document.get("date_posted")
     if isinstance(date_posted, datetime):
         return date_posted.isoformat()

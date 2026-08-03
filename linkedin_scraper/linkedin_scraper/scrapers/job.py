@@ -4,8 +4,10 @@ Job scraper for LinkedIn.
 Extracts job posting information from LinkedIn job pages.
 """
 
+import json
 import logging
-from typing import Optional
+from typing import Any, Optional
+
 from playwright.async_api import Page
 
 from ..models.job import Job
@@ -182,6 +184,57 @@ class JobScraper(BaseScraper):
 
     async def _get_posted_date(self) -> Optional[str]:
         """Extract posted date from job details."""
+        # Public LinkedIn job pages expose the canonical date in JobPosting
+        # JSON-LD. Prefer it over visible relative text when available.
+        try:
+            scripts = await self.page.locator(
+                'script[type="application/ld+json"]'
+            ).all()
+            for script in scripts:
+                content = await script.text_content()
+                if not content:
+                    continue
+                try:
+                    data = json.loads(content)
+                except json.JSONDecodeError:
+                    continue
+                date_posted = self._find_date_posted_in_json(data)
+                if date_posted and parse_date_posted(date_posted):
+                    return date_posted
+        except Exception as exc:
+            logger.debug("Could not read LinkedIn JobPosting JSON-LD: %s", exc)
+
+        # Both public and authenticated layouts may provide an exact date via
+        # a semantic <time datetime="..."> element.
+        try:
+            time_elements = await self.page.locator(
+                'time[datetime], main time, time[class*="listdate"]'
+            ).all()
+            for element in time_elements:
+                date_time = await element.get_attribute("datetime")
+                if date_time and parse_date_posted(date_time):
+                    return date_time
+                text = (await element.inner_text()).strip()
+                if text and parse_date_posted(text):
+                    return text
+        except Exception as exc:
+            logger.debug("Could not read LinkedIn time element: %s", exc)
+
+        # Target the known visible date elements before inspecting larger
+        # containers, where unrelated text may also contain words like "day".
+        try:
+            date_elements = await self.page.locator(
+                ".posted-time-ago__text, "
+                ".job-details-jobs-unified-top-card__posted-date, "
+                '[class*="posted-date"], [class*="posted-time"]'
+            ).all()
+            for element in date_elements:
+                text = (await element.inner_text()).strip()
+                if text and parse_date_posted(text):
+                    return text
+        except Exception as exc:
+            logger.debug("Could not read LinkedIn posted-date element: %s", exc)
+
         try:
             container = self.page.locator(
                 ".job-details-jobs-unified-top-card__primary-description-container"
@@ -190,25 +243,38 @@ class JobScraper(BaseScraper):
                 text = await container.inner_text()
                 parts = text.split("·")
                 if len(parts) > 1:
-                    return parts[1].strip().split("\n")[0].strip()
-        except:
-            pass
+                    candidate = parts[1].strip().split("\n")[0].strip()
+                    if parse_date_posted(candidate):
+                        return candidate
+        except Exception as exc:
+            logger.debug("Could not read LinkedIn top-card date: %s", exc)
 
         try:
-            text_elements = await self.page.locator("span, div").all()
+            text_elements = await self.page.locator("main span, main div").all()
             for elem in text_elements:
-                text = await elem.inner_text()
-                if text and (
-                    "ago" in text.lower()
-                    or "day" in text.lower()
-                    or "week" in text.lower()
-                    or "hour" in text.lower()
-                ):
-                    text = text.strip()
-                    if len(text) < 50:
-                        return text
-        except:
-            pass
+                text = (await elem.inner_text()).strip()
+                if text and len(text) < 80 and parse_date_posted(text):
+                    return text
+        except Exception as exc:
+            logger.debug("Could not find LinkedIn relative date text: %s", exc)
+        return None
+
+    @staticmethod
+    def _find_date_posted_in_json(data: Any) -> Optional[str]:
+        """Find a datePosted string in a JSON-LD object or graph."""
+        if isinstance(data, dict):
+            date_posted = data.get("datePosted")
+            if isinstance(date_posted, str) and date_posted.strip():
+                return date_posted.strip()
+            for value in data.values():
+                found = JobScraper._find_date_posted_in_json(value)
+                if found:
+                    return found
+        elif isinstance(data, list):
+            for value in data:
+                found = JobScraper._find_date_posted_in_json(value)
+                if found:
+                    return found
         return None
 
     async def _get_applicant_count(self) -> Optional[str]:

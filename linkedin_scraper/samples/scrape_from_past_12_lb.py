@@ -5,7 +5,6 @@ from pathlib import Path
 from typing import Dict, List, Optional, Set
 
 from dotenv import load_dotenv
-from pymongo import MongoClient
 
 from linkedin_scraper.core.exceptions import LinkedInScraperException
 from linkedin_scraper.scrapers.job_search import JobSearchScraper
@@ -14,6 +13,11 @@ from linkedin_scraper.core.browser import BrowserManager
 from linkedin_scraper.core.proxy import load_verified_proxy_pool
 from linkedin_scraper.filters.tech import is_tech_job
 from linkedin_scraper.models.job import Job
+from linkedin_scraper.storage.api_client import (
+    get_existing_job_urls as get_existing_api_job_urls,
+    ingest_jobs as ingest_jobs_via_api,
+    is_api_storage_enabled,
+)
 from linkedin_scraper.storage.sqlite_store import (
     get_existing_job_urls as get_existing_sqlite_job_urls,
     get_sqlite_db_path,
@@ -54,19 +58,31 @@ def normalize_job_url(url: str) -> str:
     return clean
 
 
-def get_existing_job_urls(collection, urls: List[str]) -> Set[str]:
-    if not urls:
-        return set()
+def get_existing_urls(urls: List[str]) -> Set[str]:
+    normalized = [normalize_job_url(url) for url in urls]
+    if is_api_storage_enabled():
+        return get_existing_api_job_urls(normalized)
+    return get_existing_sqlite_job_urls(get_sqlite_db_path(), normalized)
 
-    normalized = {normalize_job_url(u) for u in urls}
-    variants = set(urls) | normalized
-    existing: Set[str] = set()
-    for doc in collection.find(
-        {"linkedin_url": {"$in": list(variants)}},
-        {"linkedin_url": 1},
-    ):
-        existing.add(normalize_job_url(doc["linkedin_url"]))
-    return existing
+
+def save_jobs(documents: List[dict]) -> None:
+    if not documents:
+        log("No documents to insert")
+        return
+
+    if is_api_storage_enabled():
+        log(f"Sending {len(documents)} job(s) to backend API...")
+        result = ingest_jobs_via_api(documents)
+        log(
+            f"API ingest complete: inserted {result['inserted']}, "
+            f"skipped {result['skipped']}"
+        )
+        return
+
+    sqlite_path = get_sqlite_db_path()
+    log(f"Inserting {len(documents)} job(s) into SQLite ({sqlite_path})...")
+    sqlite_count = insert_jobs_into_sqlite(sqlite_path, documents)
+    log(f"Inserted {sqlite_count} jobs into SQLite")
 
 
 def filter_items_not_in_db(
@@ -167,18 +183,10 @@ async def main() -> None:
     log("Starting Lebanon tech job scraper")
     log(f"Search URL: {SEARCH_URL}")
 
-    mongo_uri = os.getenv("MONGODB_URI")
-    if not mongo_uri:
-        log("MONGODB_URI not found in environment")
-        return
-
-    client = MongoClient(mongo_uri)
-    collection = client["test"]["jobs"]
-    sqlite_path = get_sqlite_db_path()
-    if sqlite_path:
-        log(f"SQLite storage enabled: {sqlite_path}")
+    if is_api_storage_enabled():
+        log("Storage mode: backend API")
     else:
-        log("SQLITE_DB_PATH not set; skipping SQLite storage")
+        log(f"Storage mode: local SQLite ({get_sqlite_db_path()})")
 
     verified_proxies = load_verified_proxy_pool(log=log)
     proxy_pool: List[Optional[Dict[str, str]]] = (
@@ -186,80 +194,60 @@ async def main() -> None:
     )
     log(f"Proxy pool size: {len(proxy_pool)}")
 
-    try:
-        items, proxy_start = await search_with_proxy_rotation(proxy_pool)
-        if not items:
-            log("Search failed on all proxies")
-            return
+    items, proxy_start = await search_with_proxy_rotation(proxy_pool)
+    if not items:
+        log("Search failed on all proxies")
+        return
 
-        search_urls = [item["url"] for item in items]
-        existing_urls = get_existing_job_urls(collection, search_urls)
-        if sqlite_path:
-            normalized_search_urls = [
-                normalize_job_url(url) for url in search_urls
-            ]
-            existing_urls |= get_existing_sqlite_job_urls(
-                sqlite_path, normalized_search_urls
-            )
-        new_items, skipped_items = filter_items_not_in_db(items, existing_urls)
+    search_urls = [item["url"] for item in items]
+    existing_urls = get_existing_urls(search_urls)
+    new_items, skipped_items = filter_items_not_in_db(items, existing_urls)
 
-        if skipped_items:
-            log(
-                f"{len(skipped_items)} jobs already in database "
-                "(skipping before detail scrape)"
-            )
-            for item in skipped_items:
-                log(
-                    f"  Already exists: {normalize_job_url(item['url'])} "
-                    f"- {item.get('title', 'No title')}"
-                )
-
-        if not new_items:
-            log("All search results already exist in database. Exiting.")
-            return
-
-        log(f"{len(new_items)} new job URLs to process")
-
-        filtered_items = []
-        for item in new_items:
-            title = item.get("title", "")
-            if is_tech_job(title):
-                filtered_items.append(item)
-            else:
-                log(f"  Skipped (non-tech): {title or item.get('url', 'unknown')}")
-
-        log(f"Kept {len(filtered_items)} tech jobs after filtering")
-        for index, item in enumerate(filtered_items, start=1):
-            log(f"  [{index}] {item.get('title', 'No title')}")
-
-        if not filtered_items:
-            log("No new tech jobs to scrape. Exiting.")
-            return
-
-        log(f"Scraping details for {len(filtered_items)} new jobs")
-        jobs = await scrape_details_with_proxy_rotation(
-            filtered_items,
-            proxy_pool,
-            start_index=proxy_start,
+    if skipped_items:
+        log(
+            f"{len(skipped_items)} jobs already in database "
+            "(skipping before detail scrape)"
         )
+        for item in skipped_items:
+            log(
+                f"  Already exists: {normalize_job_url(item['url'])} "
+                f"- {item.get('title', 'No title')}"
+            )
 
-        documents = [job.to_dict() for job in jobs]
-        for document in documents:
-            document["source"] = "linkedin"
+    if not new_items:
+        log("All search results already exist in database. Exiting.")
+        return
 
-        if documents:
-            log(f"Inserting {len(documents)} new job(s) into test.jobs...")
-            result = collection.insert_many(documents)
-            log(f"Inserted {len(result.inserted_ids)} jobs into test.jobs")
+    log(f"{len(new_items)} new job URLs to process")
 
-            if sqlite_path:
-                sqlite_count = insert_jobs_into_sqlite(sqlite_path, documents)
-                log(f"Inserted {sqlite_count} jobs into SQLite ({sqlite_path})")
+    filtered_items = []
+    for item in new_items:
+        title = item.get("title", "")
+        if is_tech_job(title):
+            filtered_items.append(item)
         else:
-            log("No documents to insert")
-    finally:
-        client.close()
+            log(f"  Skipped (non-tech): {title or item.get('url', 'unknown')}")
 
+    log(f"Kept {len(filtered_items)} tech jobs after filtering")
+    for index, item in enumerate(filtered_items, start=1):
+        log(f"  [{index}] {item.get('title', 'No title')}")
+
+    if not filtered_items:
+        log("No new tech jobs to scrape. Exiting.")
+        return
+
+    log(f"Scraping details for {len(filtered_items)} new jobs")
+    jobs = await scrape_details_with_proxy_rotation(
+        filtered_items,
+        proxy_pool,
+        start_index=proxy_start,
+    )
+
+    documents = [job.to_dict() for job in jobs]
+    for document in documents:
+        document["source"] = "linkedin"
+
+    save_jobs(documents)
     log("Scraper finished successfully")
 
 

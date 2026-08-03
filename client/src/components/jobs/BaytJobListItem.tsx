@@ -1,7 +1,15 @@
-import { useState } from "react";
-import { MapPin, ChevronDown, Briefcase, Check, EyeOff } from "lucide-react";
+import { useMemo, useState } from "react";
+import {
+  MapPin,
+  ChevronDown,
+  Briefcase,
+  Check,
+  Eye,
+  EyeOff,
+} from "lucide-react";
 import type { BaytJobApiResponse } from "../../types/baytJob";
 import { formatRelativeTime } from "../../utils/dateFormatter";
+import { sanitizeStructuredHtml } from "../../utils/sanitizeHtml";
 import type { JobActions } from "./JobsListItemRow";
 
 export default function BaytJobListItem({
@@ -15,8 +23,11 @@ export default function BaytJobListItem({
   const [locationOpen, setLocationOpen] = useState(true);
 
   const company = job.companyName ?? "Unknown Company";
-  const descriptionText = job.text ?? "No description provided";
-  const displayDescription = `<p>${descriptionText.replace(/\n/g, "</p><p>")}</p>`;
+  const displayDescription = useMemo(
+    () =>
+      sanitizeStructuredHtml(job.text ?? "<p>No description provided</p>"),
+    [job.text],
+  );
   const locations = job.location ? [job.location] : [];
   const datePosted = job.datePosted;
 
@@ -48,9 +59,9 @@ export default function BaytJobListItem({
       </div>
 
       <div
-        className={`text-gruvbox-fg2 mb-4 [&_a]:text-gruvbox-orange_light [&_a:hover]:text-gruvbox-orange_light [&_a]:underline [&_a]:font-medium whitespace-pre-wrap ${
+        className={`text-gruvbox-fg2 mb-4 leading-relaxed [&_a]:text-gruvbox-orange_light [&_a:hover]:text-gruvbox-orange_light [&_a]:underline [&_a]:font-medium [&_h2]:text-xl [&_h2]:font-bold [&_h2]:text-gruvbox-fg0 [&_h2]:mt-5 [&_h2]:mb-2 [&_h3]:text-lg [&_h3]:font-bold [&_h3]:text-gruvbox-fg1 [&_h3]:mt-4 [&_h3]:mb-2 [&_p]:mb-3 [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:mb-3 [&_ol]:list-decimal [&_ol]:pl-6 [&_ol]:mb-3 [&_li]:mb-1 ${
           showDetails
-            ? "block [&_p]:mb-4 last:[&_p]:mb-0"
+            ? "block last:[&_p]:mb-0"
             : "line-clamp-3 [&_p]:inline"
         }`}
         dangerouslySetInnerHTML={{ __html: displayDescription }}
@@ -131,8 +142,12 @@ export default function BaytJobListItem({
             onClick={actions.hideJob}
             className="flex items-center gap-1.5 px-3 py-2 text-sm text-gruvbox-gray hover:text-gruvbox-fg0 bg-gruvbox-bg1 hover:bg-gruvbox-bg2 rounded-lg transition border border-gruvbox-bg3/50"
           >
-            <EyeOff className="w-4 h-4" />
-            <span>Hide</span>
+            {actions.isHidden ? (
+              <Eye className="w-4 h-4" />
+            ) : (
+              <EyeOff className="w-4 h-4" />
+            )}
+            <span>{actions.isHidden ? "Restore" : "Hide"}</span>
           </button>
 
           <button

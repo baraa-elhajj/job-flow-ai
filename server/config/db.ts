@@ -1,3 +1,7 @@
+// MongoDB connection (commented out — SQLite is now the primary database).
+// See server/config/sqlite.ts for the active database layer.
+
+/*
 import mongoose from 'mongoose';
 
 export const connectDB = async () => {
@@ -14,3 +18,6 @@ export const connectDB = async () => {
         process.exit(1);
     }
 };
+*/
+
+export {};

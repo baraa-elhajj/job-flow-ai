@@ -3,9 +3,9 @@ import * as cheerio from "cheerio";
 import { mkdir, readFile, writeFile } from "fs/promises";
 import path from "path";
 import { fileURLToPath } from "url";
-import { getSqliteDbPath, insertJobsIntoSqlite } from "../config/sqlite.js";
+import { insertJobsIntoSqlite } from "../config/sqlite.js";
+// import { Job } from "../models/Job.js";
 import type { HNHiringJobData } from "../models/HNHiringJobData.js";
-import { Job } from "../models/Job.js";
 
 const CHECKPOINT_FILE = path.join(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -204,7 +204,7 @@ export async function scrapeHNHiring(month: string, year: number) {
 }
 
 /**
- * Scrapes hnhiring.com for the given month/year and batch inserts into MongoDB.
+ * Scrapes hnhiring.com for the given month/year and batch inserts into SQLite.
  * Uses {@link server/data/hnhiring_first_title.txt} to remember the first valid job title
  * from the last run: scraping stops when that title is seen again (so only newer listings
  * are inserted), then the file is updated to the current first job title on the page.
@@ -241,20 +241,15 @@ export async function scrapeAndStoreHNHiringJobs(month: string, year: number) {
     );
 
     if (jobs.length > 0) {
+      const { count: sqliteCount } = insertJobsIntoSqlite(
+        jobs as unknown as Record<string, unknown>[],
+      );
+      console.log(`Successfully inserted ${sqliteCount} jobs into SQLite.`);
+
+      /* MongoDB implementation (commented out):
       await Job.insertMany(jobs);
       console.log(`Successfully inserted ${jobs.length} jobs into MongoDB.`);
-
-      const sqlitePath = getSqliteDbPath();
-      if (sqlitePath) {
-        const sqliteCount = insertJobsIntoSqlite(
-          jobs as unknown as Record<string, unknown>[],
-        );
-        console.log(
-          `Successfully inserted ${sqliteCount} jobs into SQLite (${sqlitePath}).`,
-        );
-      } else {
-        console.log("SQLITE_DB_PATH not set; skipping SQLite storage.");
-      }
+      */
     } else {
       console.log("No new jobs found to store.");
     }

@@ -1,5 +1,11 @@
 import type { Request, Response } from "express";
-import { User } from "../models/User.js";
+// import { User } from "../models/User.js";
+import {
+  createUser,
+  findUserByGoogleId,
+  updateUser,
+  type SqliteUser,
+} from "../config/sqlite.js";
 import { verifyGoogleIdToken } from "../services/googleAuth.js";
 import { signAuthToken } from "../utils/jwt.js";
 import type { AuthenticatedRequest } from "../middleware/authMiddleware.js";
@@ -15,14 +21,9 @@ function setAuthCookie(res: Response, token: string): void {
   });
 }
 
-function publicUser(user: {
-  _id: unknown;
-  email: string;
-  name: string;
-  picture?: string;
-}) {
+function publicUser(user: SqliteUser) {
   return {
-    id: String(user._id),
+    id: String(user.id),
     email: user.email,
     name: user.name,
     picture: user.picture,
@@ -35,6 +36,30 @@ async function findOrCreateUser(googleUser: {
   name: string;
   picture?: string;
 }) {
+  const existing = findUserByGoogleId(googleUser.googleId);
+  if (existing) {
+    const updated = updateUser(existing.id, {
+      email: googleUser.email,
+      name: googleUser.name,
+      ...(googleUser.picture !== undefined
+        ? { picture: googleUser.picture }
+        : {}),
+    });
+    return { user: updated, created: false };
+  }
+
+  const user = createUser({
+    googleId: googleUser.googleId,
+    email: googleUser.email,
+    name: googleUser.name,
+    ...(googleUser.picture !== undefined
+      ? { picture: googleUser.picture }
+      : {}),
+  });
+
+  return { user, created: true };
+
+  /* MongoDB implementation (commented out):
   const existing = await User.findOne({ googleId: googleUser.googleId });
   if (existing) {
     existing.email = googleUser.email;
@@ -54,6 +79,7 @@ async function findOrCreateUser(googleUser: {
   });
 
   return { user, created: true };
+  */
 }
 
 export async function googleLogin(req: Request, res: Response): Promise<void> {
@@ -69,7 +95,7 @@ export async function googleLogin(req: Request, res: Response): Promise<void> {
     const { user } = await findOrCreateUser(googleUser);
 
     const token = signAuthToken({
-      userId: String(user._id),
+      userId: String(user.id),
       email: user.email,
     });
 

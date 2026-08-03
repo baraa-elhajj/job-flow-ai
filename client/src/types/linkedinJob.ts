@@ -9,7 +9,7 @@ export interface LinkedInJobApiResponse {
   location?: string;
   text?: string;
   url: string;
-  datePosted: number | Date;
+  datePosted?: number | Date | null;
   applicantCount?: string;
   benefits?: string;
   source?: "linkedin";

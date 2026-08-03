@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Search, X } from "lucide-react";
+import { CalendarDays, Search, X } from "lucide-react";
 
 interface SearchJobsProps {
   onSearchChange?: (query: string) => void;
@@ -13,6 +13,8 @@ export default function SearchJobs({
 }: SearchJobsProps) {
   const [searchParams, setSearchParams] = useSearchParams();
   const query = searchParams.get("q") || "";
+  const postedAfter = searchParams.get("after") || "";
+  const postedBefore = searchParams.get("before") || "";
   const [localSearch, setLocalSearch] = useState(query);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -49,6 +51,27 @@ export default function SearchJobs({
     }
   }, [showSearch]);
 
+  const setDateFilter = (name: "after" | "before", value: string) => {
+    setSearchParams((prev) => {
+      if (value) {
+        prev.set(name, value);
+      } else {
+        prev.delete(name);
+      }
+      prev.set("page", "1");
+      return prev;
+    });
+  };
+
+  const clearDateFilters = () => {
+    setSearchParams((prev) => {
+      prev.delete("after");
+      prev.delete("before");
+      prev.set("page", "1");
+      return prev;
+    });
+  };
+
   return (
     <div className="mb-8">
       <div className="relative">
@@ -71,10 +94,55 @@ export default function SearchJobs({
           </button>
         )}
       </div>
-      {query && (
+      <div className="mt-3 flex flex-col sm:flex-row sm:items-end gap-3">
+        <label className="flex-1 text-xs font-semibold uppercase tracking-wider text-gruvbox-fg4">
+          Posted after
+          <div className="relative mt-1">
+            <CalendarDays className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gruvbox-fg4 pointer-events-none" />
+            <input
+              type="date"
+              value={postedAfter}
+              max={postedBefore || undefined}
+              onChange={(event) => setDateFilter("after", event.target.value)}
+              className="w-full pl-10 pr-3 py-2 bg-gruvbox-bg1 border border-gruvbox-bg3 rounded-lg text-gruvbox-fg0 focus:outline-none focus:border-gruvbox-orange transition"
+            />
+          </div>
+        </label>
+        <label className="flex-1 text-xs font-semibold uppercase tracking-wider text-gruvbox-fg4">
+          Posted before
+          <div className="relative mt-1">
+            <CalendarDays className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gruvbox-fg4 pointer-events-none" />
+            <input
+              type="date"
+              value={postedBefore}
+              min={postedAfter || undefined}
+              onChange={(event) => setDateFilter("before", event.target.value)}
+              className="w-full pl-10 pr-3 py-2 bg-gruvbox-bg1 border border-gruvbox-bg3 rounded-lg text-gruvbox-fg0 focus:outline-none focus:border-gruvbox-orange transition"
+            />
+          </div>
+        </label>
+        {(postedAfter || postedBefore) && (
+          <button
+            type="button"
+            onClick={clearDateFilters}
+            className="px-3 py-2 text-sm text-gruvbox-fg4 hover:text-gruvbox-fg0 transition"
+          >
+            Clear dates
+          </button>
+        )}
+      </div>
+      {(query || postedAfter || postedBefore) && (
         <p className="mt-2 text-sm text-gruvbox-fg4">
-          Search results for "
-          <span className="text-gruvbox-fg0 font-semibold">{query}</span>"
+          {query && (
+            <>
+              Search results for "
+              <span className="text-gruvbox-fg0 font-semibold">{query}</span>"
+            </>
+          )}
+          {query && (postedAfter || postedBefore) && " · "}
+          {postedAfter && `from ${postedAfter}`}
+          {postedAfter && postedBefore && " "}
+          {postedBefore && `through ${postedBefore}`}
         </p>
       )}
     </div>

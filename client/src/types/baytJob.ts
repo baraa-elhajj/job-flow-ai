@@ -8,6 +8,6 @@ export interface BaytJobApiResponse {
   location?: string;
   text?: string;
   url: string;
-  datePosted: number | Date;
+  datePosted?: number | Date | null;
   source?: "bayt";
 }

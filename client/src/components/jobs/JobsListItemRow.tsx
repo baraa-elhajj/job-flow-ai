@@ -9,7 +9,15 @@ import BaytJobListItem from "./BaytJobListItem";
 import HnhiringJobListItem from "./HnhiringJobListItem";
 import LinkedInJobListItem from "./LinkedInJobListItem";
 
-export default function JobsListItemRow({ job }: { job: JobsListItem }) {
+export default function JobsListItemRow({
+  job,
+  showHidden = false,
+  onHiddenChange,
+}: {
+  job: JobsListItem;
+  showHidden?: boolean;
+  onHiddenChange?: (jobId: string, hidden: boolean) => void;
+}) {
   const [isApplied, setIsApplied] = useState<boolean>(() => {
     try {
       const saved = localStorage.getItem("appliedJobIds");
@@ -46,30 +54,34 @@ export default function JobsListItemRow({ job }: { job: JobsListItem }) {
     }
   }, [isApplied, job._id]);
 
-  useEffect(() => {
+  const toggleHidden = () => {
     try {
       const saved = localStorage.getItem("hiddenJobIds");
       let currentIds: string[] = saved ? JSON.parse(saved) : [];
+      const nextHidden = !isHidden;
 
-      if (isHidden) {
+      if (nextHidden) {
         if (!currentIds.includes(job._id)) currentIds.push(job._id);
       } else {
         currentIds = currentIds.filter((id) => id !== job._id);
       }
       localStorage.setItem("hiddenJobIds", JSON.stringify(currentIds));
+      setIsHidden(nextHidden);
+      onHiddenChange?.(job._id, nextHidden);
     } catch (error) {
       console.error("Error updating localStorage for hidden jobs:", error);
     }
-  }, [isHidden, job._id]);
+  };
 
-  if (isHidden) {
+  if (isHidden && !showHidden) {
     return null;
   }
 
   const clientActions = {
     isApplied,
+    isHidden,
     toggleApplied: () => setIsApplied((prev) => !prev),
-    hideJob: () => setIsHidden(true),
+    hideJob: toggleHidden,
   };
 
   if (isHnhiringJobApiResponse(job)) {
@@ -86,6 +98,7 @@ export default function JobsListItemRow({ job }: { job: JobsListItem }) {
 
 export interface JobActions {
   isApplied: boolean;
+  isHidden: boolean;
   toggleApplied: () => void;
   hideJob: () => void;
 }

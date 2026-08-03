@@ -1,10 +1,15 @@
+// Mongoose model (commented out — SQLite is now the primary database).
+// See server/config/sqlite.ts for the active database layer.
+
+/*
 import mongoose, { Schema, Document } from "mongoose";
+*/
 
 /**
  * Unified Job interface supporting both HnhiringJobApiResponse and LinkedInJobApiResponse.
  * Common fields are required/prioritized, uncommon fields are optional.
  */
-export interface IJob extends Document {
+export interface IJob {
   // Common fields
   title: string;
   text: string;
@@ -30,17 +35,15 @@ export interface IJob extends Document {
   benefits?: string;
 }
 
+/*
 const JobSchema: Schema = new Schema(
   {
-    // Common fields
     title: { type: String, required: true },
     text: { type: String, required: true },
     datePosted: { type: Date, required: true },
     source: { type: String, enum: ["hnhiring", "linkedin", "bayt"] },
     companyName: { type: String },
     url: { type: Schema.Types.Mixed },
-
-    // HN Hiring specific fields
     by: { type: String },
     jobTitle: [{ type: String }],
     jobType: [{ type: String }],
@@ -50,8 +53,6 @@ const JobSchema: Schema = new Schema(
     seniority: [{ type: String }],
     salary: [{ type: String }],
     visaSponsorship: [{ type: String }],
-
-    // LinkedIn specific fields
     companyLinkedInUrl: { type: String },
     applicantCount: { type: String },
     benefits: { type: String },
@@ -60,3 +61,4 @@ const JobSchema: Schema = new Schema(
 );
 
 export const Job = mongoose.model<IJob>("Job", JobSchema);
+*/

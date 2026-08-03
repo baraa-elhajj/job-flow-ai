@@ -2,7 +2,13 @@
  * Format a date as relative time
  * Examples: "2 hours ago", "3 days ago", "1 week ago"
  */
-export function formatRelativeTime(date: Date | string | number): string {
+export function formatRelativeTime(
+  date: Date | string | number | null | undefined,
+): string {
+  if (date == null) {
+    return "Date unknown";
+  }
+
   const dateObj =
     typeof date === "string" || typeof date === "number"
       ? new Date(date)
@@ -60,9 +66,13 @@ export function formatRelativeTime(date: Date | string | number): string {
  * Examples: "Jun 14, 2026", "June 14, 2026 at 2:30 PM"
  */
 export function formatDate(
-  date: Date | string | number,
+  date: Date | string | number | null | undefined,
   includeTime = false,
 ): string {
+  if (date == null) {
+    return "Date unknown";
+  }
+
   const dateObj =
     typeof date === "string" || typeof date === "number"
       ? new Date(date)

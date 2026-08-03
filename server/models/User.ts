@@ -1,14 +1,21 @@
-import mongoose, { Schema, type Document } from "mongoose";
+// Mongoose model (commented out — SQLite is now the primary database).
+// See server/config/sqlite.ts for the active database layer.
 
-export interface IUser extends Document {
+/*
+import mongoose, { Schema, type Document } from "mongoose";
+*/
+
+export interface IUser {
+  id: number;
   googleId: string;
   email: string;
   name: string;
   picture?: string;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: string;
+  updatedAt: string;
 }
 
+/*
 const userSchema = new Schema<IUser>(
   {
     googleId: { type: String, required: true, unique: true, index: true },
@@ -20,3 +27,4 @@ const userSchema = new Schema<IUser>(
 );
 
 export const User = mongoose.model<IUser>("User", userSchema);
+*/

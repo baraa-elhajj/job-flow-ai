@@ -1,4 +1,4 @@
-import { Zap, Moon, Sun } from "lucide-react";
+import { EyeOff, Zap, Moon, Sun } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useAuth } from "../context/authContext";
@@ -34,6 +34,15 @@ const Navbar = () => {
           </div>
         </Link>
         <div className="flex gap-4 items-center">
+          {!loading && user && (
+            <Link
+              to="/hidden"
+              className="inline-flex items-center gap-2 px-3 py-2 text-sm text-gruvbox-fg4 hover:text-gruvbox-fg0 hover:bg-gruvbox-bg2/50 rounded-lg transition"
+            >
+              <EyeOff className="w-4 h-4" />
+              <span className="hidden sm:inline">Hidden Jobs</span>
+            </Link>
+          )}
           <button
             onClick={() => setIsDark(!isDark)}
             className="p-2 text-gruvbox-fg4 hover:text-gruvbox-fg0 rounded-lg transition"

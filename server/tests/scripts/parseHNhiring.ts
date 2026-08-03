@@ -1,6 +1,7 @@
 import "dotenv/config";
-import mongoose from "mongoose";
-import { connectDB } from '../../config/db.js';
+// import mongoose from "mongoose";
+// import { connectDB } from '../../config/db.js';
+import { initSqlite } from '../../config/sqlite.js';
 import { scrapeAndStoreHNHiringJobs } from '../../services/hnhiringScraper.js';
 import { HNHiringParser } from '../../utils/hnhiringParser.js';
 
@@ -20,13 +21,9 @@ function initializeEnrichedFields(parsed: any) {
     };
 }
 
-function docDedupKey(doc: { by?: unknown; title?: unknown }): string {
-    return `${String(doc.by ?? '')}\0${String(doc.title ?? '')}`;
-}
-
 /**
  * Scrapes hnhiring.com directly, parses titles with {@link HNHiringParser},
- * inserts only jobs that are not already in `parsedHNJobs` (matched by by + title).
+ * and stores enriched jobs in SQLite.
  *
  * Usage: npx tsx server/tests/scripts/parseHNhiring.ts [month] [year]
  * Example: npx tsx server/tests/scripts/parseHNhiring.ts may 2026
@@ -37,40 +34,14 @@ async function runTest() {
     const year = parseInt(process.argv[3] ?? String(new Date().getFullYear()), 10);
 
     try {
-        console.log("Connecting to database...");
-        await connectDB();
+        console.log("Initializing SQLite database...");
+        initSqlite();
 
         console.log(`Scraping hnhiring.com (${month} ${year})...`);
         const scraped = await scrapeAndStoreHNHiringJobs(month, year) ?? [];
         console.log(`Scraper returned ${scraped.length} job(s).`);
 
-        const db = mongoose.connection.db;
-        if (!db) {
-            throw new Error("Database connection not established");
-        }
-
-        const parsedHNJobs = db.collection('Jobs');
-        // await parsedHNJobs.updateMany(
-        //     {},
-        //     { $set: { source: "hnhiring" } }
-        //   )
-        // const existing = await parsedHNJobs
-        //     .find({}, { projection: { by: 1, title: 1, _id: 0 } })
-        //     .toArray();
-        // const existingKeys = new Set(
-        //     existing.map((j) => docDedupKey(j as { by?: unknown; title?: unknown })),
-        // );
-
-        // const novel = scraped.filter((j) => !existingKeys.has(docDedupKey(j)));
-        // console.log(`New jobs (not already in parsedHNJobs): ${novel.length}`);
-
-        // if (novel.length === 0) {
-        //     console.log("Nothing to parse or insert.");
-        //     await mongoose.disconnect();
-        //     process.exit(0);
-        // }
-
-        // console.log(`Parsing ${novel.length} new job(s)...`);
+        console.log(`Parsing ${scraped.length} job(s)...`);
         const parser = new HNHiringParser();
         const enrichedJobs = await Promise.all(
             scraped.map(async (job) => {
@@ -90,18 +61,25 @@ async function runTest() {
             }),
         );
 
+        console.log(`Parsed ${enrichedJobs.length} enriched job(s).`);
+        console.log('Enriched jobs are stored via scrapeAndStoreHNHiringJobs in SQLite.');
+
+        /* MongoDB implementation (commented out):
+        console.log("Connecting to database...");
+        await connectDB();
+
+        const db = mongoose.connection.db;
+        const parsedHNJobs = db.collection('Jobs');
         if (enrichedJobs.length > 0) {
             const insertResult = await parsedHNJobs.insertMany(enrichedJobs);
             console.log(`Inserted ${insertResult.insertedCount} job(s) into 'parsedHNJobs'.`);
-        } else {
-            console.log('No new jobs to insert.');
         }
-
         await mongoose.disconnect();
+        */
+
         process.exit(0);
     } catch (error) {
         console.error("Error:", error);
-        await mongoose.disconnect().catch(() => {});
         process.exit(1);
     }
 }

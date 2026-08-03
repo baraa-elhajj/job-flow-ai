@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-"""Copy job documents from MongoDB into the local SQLite jobs database."""
+"""One-time migration utility: copy job documents from MongoDB into SQLite.
+
+This script reads from MongoDB and is kept for historical data migration only.
+The application now uses SQLite as its primary database.
+"""
 
 from __future__ import annotations
 
