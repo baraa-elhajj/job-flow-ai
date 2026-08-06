@@ -94,11 +94,15 @@ class ByparrClient:
         return html
 
     def health_check(self) -> bool:
-        try:
-            response = self._session.get(
-                f"{self.base_url}/docs",
-                timeout=10,
-            )
-            return response.status_code == 200
-        except requests.RequestException:
-            return False
+        """Return True when Byparr or FlareSolverr is reachable."""
+        for path in ("/", "/docs"):
+            try:
+                response = self._session.get(
+                    f"{self.base_url}{path}",
+                    timeout=10,
+                )
+                if response.status_code == 200:
+                    return True
+            except requests.RequestException:
+                continue
+        return False
