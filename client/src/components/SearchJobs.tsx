@@ -82,7 +82,7 @@ export default function SearchJobs({
           placeholder="Search jobs by title, company, or skills..."
           value={localSearch}
           onChange={(e) => setLocalSearch(e.target.value)}
-          className="w-full pl-12 pr-12 py-3 bg-gruvbox-bg1 border border-gruvbox-bg3 rounded-lg text-gruvbox-fg0 placeholder-gruvbox-fg4 focus:outline-none focus:border-gruvbox-orange transition"
+          className="w-full pl-12 pr-12 py-3 bg-gruvbox-bg1 border border-gruvbox-bg3 rounded-lg text-gruvbox-fg0 placeholder-gruvbox-fg4 focus:outline-none focus:border-gruvbox-orange transition text-base"
         />
         {localSearch && (
           <button
@@ -104,7 +104,7 @@ export default function SearchJobs({
               value={postedAfter}
               max={postedBefore || undefined}
               onChange={(event) => setDateFilter("after", event.target.value)}
-              className="w-full pl-10 pr-3 py-2 bg-gruvbox-bg1 border border-gruvbox-bg3 rounded-lg text-gruvbox-fg0 focus:outline-none focus:border-gruvbox-orange transition"
+              className="w-full pl-10 pr-3 py-2 bg-gruvbox-bg1 border border-gruvbox-bg3 rounded-lg text-gruvbox-fg0 focus:outline-none focus:border-gruvbox-orange transition min-w-0"
             />
           </div>
         </label>
@@ -117,7 +117,7 @@ export default function SearchJobs({
               value={postedBefore}
               min={postedAfter || undefined}
               onChange={(event) => setDateFilter("before", event.target.value)}
-              className="w-full pl-10 pr-3 py-2 bg-gruvbox-bg1 border border-gruvbox-bg3 rounded-lg text-gruvbox-fg0 focus:outline-none focus:border-gruvbox-orange transition"
+              className="w-full pl-10 pr-3 py-2 bg-gruvbox-bg1 border border-gruvbox-bg3 rounded-lg text-gruvbox-fg0 focus:outline-none focus:border-gruvbox-orange transition min-w-0"
             />
           </div>
         </label>

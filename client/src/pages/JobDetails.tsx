@@ -102,7 +102,7 @@ export default function JobDetail() {
 
   if (error || !job) {
     return (
-      <div className="min-h-screen bg-gruvbox-bg flex flex-col items-center justify-center px-6 text-center">
+      <div className="min-h-screen bg-gruvbox-bg flex flex-col items-center justify-center px-4 sm:px-6 text-center">
         <h1 className="text-3xl md:text-4xl font-bold text-gruvbox-fg0 mb-4">
           Job Not Found
         </h1>
@@ -122,7 +122,7 @@ export default function JobDetail() {
 
   return (
     <div className="min-h-screen bg-gruvbox-bg">
-      <section className="max-w-7xl mx-auto px-6 py-12">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
         <button
           onClick={() => navigate(-1)}
           className="inline-flex items-center gap-2 text-gruvbox-fg0 hover:text-gruvbox-fg0/90 mb-8 transition"
@@ -132,11 +132,11 @@ export default function JobDetail() {
         </button>
 
         {/* Job Header */}
-        <div className="job-card p-8 mb-8">
-          <h1 className="text-4xl font-bold text-gruvbox-fg0 mb-2">
+        <div className="job-card p-4 sm:p-8 mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gruvbox-fg0 mb-2 break-words">
             {job.title}
           </h1>
-          <p className="text-2xl text-gruvbox-orange_light mb-6">
+          <p className="text-xl sm:text-2xl text-gruvbox-orange_light mb-6 break-words">
             {job.companyName || job.by}
           </p>
 
@@ -197,12 +197,12 @@ export default function JobDetail() {
         </div>
 
         {/* Job Description */}
-        <div className="job-card p-8 mb-8">
-          <h2 className="text-2xl font-bold text-gruvbox-fg0 mb-4">
+        <div className="job-card p-4 sm:p-8 mb-6 sm:mb-8">
+          <h2 className="text-xl sm:text-2xl font-bold text-gruvbox-fg0 mb-4">
             Job Description
           </h2>
           <div
-            className="text-gruvbox-fg2 leading-relaxed [&_p]:mb-4 last:[&_p]:mb-0 [&_a]:text-gruvbox-orange_light [&_a:hover]:text-gruvbox-orange_light [&_a]:underline [&_a]:font-medium"
+            className="job-prose text-gruvbox-fg2 leading-relaxed [&_p]:mb-4 last:[&_p]:mb-0 [&_a]:text-gruvbox-orange_light [&_a:hover]:text-gruvbox-orange_light [&_a]:underline [&_a]:font-medium"
             dangerouslySetInnerHTML={{ __html: job.text }}
           />
         </div>

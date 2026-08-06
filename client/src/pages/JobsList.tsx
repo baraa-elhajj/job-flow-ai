@@ -72,9 +72,9 @@ export default function JobsList({
 
   return (
     <div className="min-h-screen bg-gruvbox-bg">
-      <section className="max-w-6xl mx-auto px-6 pb-12">
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 pb-12">
         <div
-          className={`transition-all duration-500 ease-in-out overflow-hidden ${showSearch ? "max-h-80 opacity-100" : "max-h-0 opacity-0"}`}
+          className={`transition-all duration-500 ease-in-out overflow-hidden ${showSearch ? "max-h-[32rem] sm:max-h-80 opacity-100" : "max-h-0 opacity-0"}`}
         >
           <SearchJobs showSearch={showSearch} />
         </div>
@@ -106,17 +106,22 @@ export default function JobsList({
             </div>
 
             {totalPages > 1 && (
-              <div className="flex justify-center gap-4 mt-12">
+              <div className="flex flex-wrap justify-center items-center gap-2 sm:gap-4 mt-12">
                 <button
                   type="button"
                   onClick={() => handlePageChange(Math.max(1, page - 1))}
                   disabled={page === 1}
-                  className="px-6 py-2 bg-gruvbox-bg2 text-gruvbox-fg0 rounded-lg disabled:opacity-40 hover:bg-gruvbox-bg3 transition"
+                  className="px-4 sm:px-6 py-2 bg-gruvbox-bg2 text-gruvbox-fg0 rounded-lg disabled:opacity-40 hover:bg-gruvbox-bg3 transition text-sm sm:text-base"
                 >
                   Previous
                 </button>
-                <span className="flex items-center text-gruvbox-fg4">
-                  Page {page} of {totalPages}
+                <span className="flex items-center text-gruvbox-fg4 text-sm sm:text-base px-2">
+                  <span className="sm:hidden">
+                    {page}/{totalPages}
+                  </span>
+                  <span className="hidden sm:inline">
+                    Page {page} of {totalPages}
+                  </span>
                 </span>
                 <button
                   type="button"
@@ -124,7 +129,7 @@ export default function JobsList({
                     handlePageChange(Math.min(totalPages, page + 1))
                   }
                   disabled={page === totalPages}
-                  className="px-6 py-2 bg-gruvbox-bg2 text-gruvbox-fg0 rounded-lg disabled:opacity-40 hover:bg-gruvbox-bg3 transition"
+                  className="px-4 sm:px-6 py-2 bg-gruvbox-bg2 text-gruvbox-fg0 rounded-lg disabled:opacity-40 hover:bg-gruvbox-bg3 transition text-sm sm:text-base"
                 >
                   Next
                 </button>

@@ -64,11 +64,13 @@ export default function HiddenJobs() {
 
   return (
     <div className="min-h-screen bg-gruvbox-bg">
-      <section className="max-w-6xl mx-auto px-6 py-10 pb-16">
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-10 pb-16">
         <div className="mb-8 border-b border-gruvbox-bg3 pb-6">
-          <div className="flex items-center gap-3 mb-2">
-            <EyeOff className="w-7 h-7 text-gruvbox-orange" />
-            <h1 className="text-3xl font-bold text-gruvbox-fg0">Hidden Jobs</h1>
+          <div className="flex items-center gap-3 mb-2 min-w-0">
+            <EyeOff className="w-6 h-6 sm:w-7 sm:h-7 text-gruvbox-orange shrink-0" />
+            <h1 className="text-2xl sm:text-3xl font-bold text-gruvbox-fg0 break-words">
+              Hidden Jobs
+            </h1>
           </div>
           <p className="text-gruvbox-fg4">
             Review jobs you hid and restore them to the main feed.
@@ -84,7 +86,7 @@ export default function HiddenJobs() {
             {error}
           </div>
         ) : jobs.length === 0 ? (
-          <div className="job-card p-12 text-center">
+          <div className="job-card p-8 sm:p-12 text-center">
             <EyeOff className="w-10 h-10 mx-auto mb-3 text-gruvbox-fg4" />
             <p className="text-lg text-gruvbox-fg2">No hidden jobs.</p>
           </div>

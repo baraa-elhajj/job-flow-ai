@@ -21,8 +21,8 @@ export default function Home({ source }: { source: string }) {
             </p>
           </div>
 
-          <div className="flex items-center justify-center lg:justify-end">
-            <div className="flex bg-gruvbox-bg1 border border-gruvbox-bg3 rounded-xl p-1 overflow-x-auto no-scrollbar max-w-full">
+          <div className="flex flex-wrap items-center justify-center lg:justify-end gap-2 w-full min-w-0">
+            <div className="flex min-w-0 shrink bg-gruvbox-bg1 border border-gruvbox-bg3 rounded-xl p-1 overflow-x-auto no-scrollbar max-w-full">
               {[
                 { id: "all", label: "All", path: "/" },
                 { id: "hnhiring", label: "HN Hiring", path: "/hnhiring" },
@@ -32,7 +32,7 @@ export default function Home({ source }: { source: string }) {
                 <button
                   key={filter.id}
                   onClick={() => navigate(filter.path)}
-                  className={`px-4 py-2 rounded-lg font-bold text-sm sm:text-base transition-all duration-200 whitespace-nowrap ${
+                  className={`px-3 sm:px-4 py-2 rounded-lg font-bold text-xs sm:text-base transition-all duration-200 whitespace-nowrap ${
                     source === filter.id
                       ? "bg-gruvbox-orange text-white shadow-md"
                       : "text-gruvbox-fg4 hover:text-gruvbox-fg2 hover:bg-gruvbox-bg2/50"
@@ -54,7 +54,7 @@ export default function Home({ source }: { source: string }) {
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6">
         <JobsList
           source={source}
           showSearch={showSearch}

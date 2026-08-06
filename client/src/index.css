@@ -4,8 +4,22 @@
 @tailwind components;
 @tailwind utilities;
 
+html,
+body {
+  overflow-x: hidden;
+}
+
 body {
   font-family: 'Varela Round', sans-serif;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
 }
 
 @keyframes float-slow {
@@ -158,8 +172,21 @@ body {
 
 @layer components {
   .job-card {
-    @apply bg-gruvbox-bg1 border border-gruvbox-bg3 rounded-xl p-6 transition-all duration-200;
+    @apply bg-gruvbox-bg1 border border-gruvbox-bg3 rounded-xl p-4 sm:p-6 transition-all duration-200;
     @apply hover:border-gruvbox-orange;
+  }
+
+  .job-card-footer {
+    @apply flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mt-2 pt-4 border-t border-gruvbox-bg3/50;
+  }
+
+  .job-card-actions {
+    @apply flex flex-wrap items-center gap-2 w-full sm:w-auto sm:justify-end;
+  }
+
+  .job-prose {
+    @apply break-words [overflow-wrap:anywhere];
+    @apply [&_img]:max-w-full [&_pre]:overflow-x-auto [&_table]:block [&_table]:max-w-full [&_table]:overflow-x-auto;
   }
 
   html:not(.dark) .job-card {

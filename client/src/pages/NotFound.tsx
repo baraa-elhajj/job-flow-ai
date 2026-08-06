@@ -3,7 +3,7 @@ import { Zap, ArrowLeft } from "lucide-react";
 
 const NotFound = () => {
   return (
-    <div className="min-h-screen bg-gruvbox-bg flex flex-col items-center justify-center px-6 text-center">
+    <div className="min-h-screen bg-gruvbox-bg flex flex-col items-center justify-center px-4 sm:px-6 text-center">
       <div className="mb-6 relative">
         <Zap
           size={80}
@@ -14,7 +14,7 @@ const NotFound = () => {
         </span>
       </div>
 
-      <h1 className="text-4xl md:text-5xl font-bold text-gruvbox-fg0 mb-4">
+      <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gruvbox-fg0 mb-4">
         Page Lost in the Flow
       </h1>
 

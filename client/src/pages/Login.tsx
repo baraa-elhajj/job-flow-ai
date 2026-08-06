@@ -42,9 +42,9 @@ export default function Login() {
   return (
     <div className="min-h-screen bg-gruvbox-bg flex items-center justify-center px-4">
       <div className="w-full max-w-md">
-        <div className="job-card p-8">
+        <div className="job-card p-6 sm:p-8">
           <div className="mb-8 text-center">
-            <h1 className="text-4xl font-bold text-gruvbox-fg0 mb-2">
+            <h1 className="text-3xl sm:text-4xl font-bold text-gruvbox-fg0 mb-2">
               JobFlow AI
             </h1>
             <p className="text-gruvbox-fg2">Sign in to continue</p>

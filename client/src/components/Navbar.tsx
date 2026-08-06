@@ -26,14 +26,16 @@ const Navbar = () => {
 
   return (
     <nav className="sticky top-0 z-50 backdrop-blur-md bg-gruvbox-bg/90 border-b border-gruvbox-bg3">
-      <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
-        <Link to="/">
-          <div className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition">
-            <Zap className="w-8 h-8 text-gruvbox-orange fill-gruvbox-orange/20 animate-pulse" />
-            <h1 className="text-2xl font-bold text-gruvbox-fg0">JobFlow AI</h1>
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center gap-3 min-w-0">
+        <Link to="/" className="min-w-0 shrink">
+          <div className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition min-w-0">
+            <Zap className="w-7 h-7 sm:w-8 sm:h-8 shrink-0 text-gruvbox-orange fill-gruvbox-orange/20 animate-pulse" />
+            <h1 className="text-lg sm:text-2xl font-bold text-gruvbox-fg0 truncate">
+              JobFlow AI
+            </h1>
           </div>
         </Link>
-        <div className="flex gap-4 items-center">
+        <div className="flex gap-2 sm:gap-4 items-center shrink-0">
           {!loading && user && (
             <Link
               to="/hidden"

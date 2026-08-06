@@ -15,6 +15,11 @@ from linkedin_scraper.filters.tech import is_tech_job
 from linkedin_scraper.scrapers.bayt_job import BaytJobScraper
 from linkedin_scraper.scrapers.bayt_search import BaytSearchScraper
 from linkedin_scraper.scrapers.bayt_html import normalize_bayt_job_url
+from linkedin_scraper.storage.api_client import (
+    get_existing_job_urls as get_existing_api_job_urls,
+    ingest_jobs as ingest_jobs_via_api,
+    is_api_storage_enabled,
+)
 from linkedin_scraper.storage.sqlite_store import (
     get_existing_job_urls as get_existing_sqlite_job_urls,
     get_sqlite_db_path,
@@ -79,14 +84,49 @@ def filter_items_not_in_db(
     return new_items, skipped_items
 
 
+def get_existing_urls(urls: List[str]) -> Set[str]:
+    normalized = [normalize_bayt_job_url(url) for url in urls]
+    if is_api_storage_enabled():
+        return get_existing_api_job_urls(normalized)
+    return get_existing_sqlite_job_urls(get_sqlite_db_path(), normalized)
+
+
+def save_jobs(documents: List[dict]) -> None:
+    if not documents:
+        log("No documents to insert")
+        return
+
+    if is_api_storage_enabled():
+        log(f"Sending {len(documents)} job(s) to backend API...")
+        result = ingest_jobs_via_api(documents)
+        log(
+            f"API ingest complete: inserted {result['inserted']}, "
+            f"skipped {result['skipped']}"
+        )
+        return
+
+    sqlite_path = get_sqlite_db_path()
+    log(f"Inserting {len(documents)} job(s) into SQLite ({sqlite_path})...")
+    sqlite_count = insert_jobs_into_sqlite(sqlite_path, documents)
+    log(f"Inserted {sqlite_count} jobs into SQLite")
+
+
 def main() -> None:
     log("Starting Bayt international tech job scraper (past 24 hours)")
     log(f"Search URL: {SEARCH_URL}")
     log(f"Scrape limit: {SCRAPE_LIMIT}")
     log(f"Byparr URL: {BYPARR_URL}")
 
-    sqlite_path = get_sqlite_db_path()
-    log(f"SQLite storage: {sqlite_path}")
+    if is_api_storage_enabled():
+        log("Storage mode: backend API (SCRAPER_API_URL)")
+    else:
+        sqlite_path = get_sqlite_db_path()
+        log(f"Storage mode: local SQLite ({sqlite_path})")
+        if sqlite_path == "./data/jobs.db":
+            log(
+                "WARNING: SQLITE_DB_PATH is not set; using ./data/jobs.db. "
+                "Set SCRAPER_API_URL + SCRAPER_API_KEY or SQLITE_DB_PATH for production."
+            )
 
     # MongoDB connection (commented out):
     # mongo_uri = os.getenv("MONGODB_URI")
@@ -127,12 +167,7 @@ def main() -> None:
         log(f"Found {len(items)} job listings from search")
 
         search_urls = [item["url"] for item in items]
-        normalized_search_urls = [
-            normalize_bayt_job_url(url) for url in search_urls
-        ]
-        existing_urls = get_existing_sqlite_job_urls(
-            sqlite_path, normalized_search_urls
-        )
+        existing_urls = get_existing_urls(search_urls)
         new_items, skipped_items = filter_items_not_in_db(items, existing_urls)
 
         if skipped_items:
@@ -198,13 +233,7 @@ def main() -> None:
             document["source"] = "bayt"
 
         if documents:
-            log(f"Inserting {len(documents)} new job(s) into SQLite...")
-            sqlite_count = insert_jobs_into_sqlite(sqlite_path, documents)
-            log(f"Inserted {sqlite_count} jobs into SQLite ({sqlite_path})")
-
-            # MongoDB insert (commented out):
-            # result = collection.insert_many(documents)
-            # log(f"Inserted {len(result.inserted_ids)} jobs into test.jobs")
+            save_jobs(documents)
         else:
             log("No documents to insert")
     finally:
